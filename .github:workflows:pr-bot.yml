@@ -35,4 +35,3 @@ jobs:
           branch: ${{ github.ref_name }}
           title: "Automated PR"
           body: "This PR was created automatically by the PR Bot workflow."
-# quote
