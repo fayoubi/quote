@@ -42,7 +42,7 @@ jobs:
       - name: Open Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.PR_BOT_TOKEN }}   # or secrets.GITHUB_TOKEN if it has write perms
+          token: ${{ secrets.GITHUB_TOKEN }}   # or secrets.GITHUB_TOKEN if it has write perms
           commit-message: "Auto PR: update ${{ github.event.inputs.filename }}"
           title: "Automated PR for ${{ github.event.inputs.filename }}"
           body: "This PR was created automatically by the PR Bot workflow."
