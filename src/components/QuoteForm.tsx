@@ -5,9 +5,9 @@ import { Info, ChevronDown } from 'lucide-react';
 interface QuoteFormData {
   gender: 'male' | 'female';
   birthdate: string;
-  height: string;
-  weight: string;
-  zipCode: string;
+  heightCm: string;
+  weightKg: string;
+  city: string;
   usesNicotine: boolean;
 }
 
@@ -16,11 +16,25 @@ const QuoteForm: React.FC = () => {
   const [formData, setFormData] = useState<QuoteFormData>({
     gender: 'male',
     birthdate: '',
-    height: '',
-    weight: '',
-    zipCode: '',
+    heightCm: '',
+    weightKg: '',
+    city: '',
     usesNicotine: false,
   });
+
+  // Top 10 Moroccan cities by population
+  const moroccanCities = [
+    { name: 'Casablanca', population: '3,359,818' },
+    { name: 'Rabat', population: '577,827' },
+    { name: 'Fez', population: '1,112,072' },
+    { name: 'Marrakech', population: '928,850' },
+    { name: 'Agadir', population: '421,844' },
+    { name: 'Tangier', population: '947,952' },
+    { name: 'Meknes', population: '632,079' },
+    { name: 'Oujda', population: '494,252' },
+    { name: 'Kenitra', population: '431,282' },
+    { name: 'Tetouan', population: '380,787' }
+  ];
 
   const handleInputChange = (field: keyof QuoteFormData, value: string | boolean) => {
     setFormData(prev => ({
@@ -32,7 +46,14 @@ const QuoteForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Here you would typically send the data to your backend
-    console.log('Form submitted:', formData);
+    console.log('Form submitted with metric units:', {
+      gender: formData.gender,
+      birthdate: formData.birthdate,
+      heightCm: formData.heightCm,
+      weightKg: formData.weightKg,
+      city: formData.city,
+      usesNicotine: formData.usesNicotine
+    });
     navigate('/quote');
   };
 
@@ -111,89 +132,81 @@ const QuoteForm: React.FC = () => {
               />
             </div>
 
-            {/* Height */}
+            {/* Height in Centimeters */}
             <div>
               <label className="block text-white text-sm font-medium mb-2">
-                Height
+                Height (cm)
               </label>
               <div className="relative">
                 <select
-                  value={formData.height}
-                  onChange={(e) => handleInputChange('height', e.target.value)}
+                  value={formData.heightCm}
+                  onChange={(e) => handleInputChange('heightCm', e.target.value)}
                   className="w-full px-4 py-3 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-white/50 appearance-none"
                   required
                 >
                   <option value="">Select height</option>
-                  <option value="4-0">4'0"</option>
-                  <option value="4-1">4'1"</option>
-                  <option value="4-2">4'2"</option>
-                  <option value="4-3">4'3"</option>
-                  <option value="4-4">4'4"</option>
-                  <option value="4-5">4'5"</option>
-                  <option value="4-6">4'6"</option>
-                  <option value="4-7">4'7"</option>
-                  <option value="4-8">4'8"</option>
-                  <option value="4-9">4'9"</option>
-                  <option value="4-10">4'10"</option>
-                  <option value="4-11">4'11"</option>
-                  <option value="5-0">5'0"</option>
-                  <option value="5-1">5'1"</option>
-                  <option value="5-2">5'2"</option>
-                  <option value="5-3">5'3"</option>
-                  <option value="5-4">5'4"</option>
-                  <option value="5-5">5'5"</option>
-                  <option value="5-6">5'6"</option>
-                  <option value="5-7">5'7"</option>
-                  <option value="5-8">5'8"</option>
-                  <option value="5-9">5'9"</option>
-                  <option value="5-10">5'10"</option>
-                  <option value="5-11">5'11"</option>
-                  <option value="6-0">6'0"</option>
-                  <option value="6-1">6'1"</option>
-                  <option value="6-2">6'2"</option>
-                  <option value="6-3">6'3"</option>
-                  <option value="6-4">6'4"</option>
-                  <option value="6-5">6'5"</option>
-                  <option value="6-6">6'6"</option>
-                  <option value="6-7">6'7"</option>
-                  <option value="6-8">6'8"</option>
-                  <option value="6-9">6'9"</option>
-                  <option value="6-10">6'10"</option>
-                  <option value="6-11">6'11"</option>
-                  <option value="7-0">7'0"</option>
+                  <option value="120">120 cm (3'11")</option>
+                  <option value="125">125 cm (4'1")</option>
+                  <option value="130">130 cm (4'3")</option>
+                  <option value="135">135 cm (4'5")</option>
+                  <option value="140">140 cm (4'7")</option>
+                  <option value="145">145 cm (4'9")</option>
+                  <option value="150">150 cm (4'11")</option>
+                  <option value="155">155 cm (5'1")</option>
+                  <option value="160">160 cm (5'3")</option>
+                  <option value="165">165 cm (5'5")</option>
+                  <option value="170">170 cm (5'7")</option>
+                  <option value="175">175 cm (5'9")</option>
+                  <option value="180">180 cm (5'11")</option>
+                  <option value="185">185 cm (6'1")</option>
+                  <option value="190">190 cm (6'3")</option>
+                  <option value="195">195 cm (6'5")</option>
+                  <option value="200">200 cm (6'7")</option>
+                  <option value="205">205 cm (6'9")</option>
+                  <option value="210">210 cm (6'11")</option>
+                  <option value="215">215 cm (7'1")</option>
+                  <option value="220">220 cm (7'3")</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
               </div>
             </div>
 
-            {/* Weight */}
+            {/* Weight in Kilograms */}
             <div>
               <label className="block text-white text-sm font-medium mb-2">
-                Weight (lbs)
+                Weight (kg)
               </label>
               <input
                 type="number"
-                value={formData.weight}
-                onChange={(e) => handleInputChange('weight', e.target.value)}
-                placeholder="Enter weight"
+                value={formData.weightKg}
+                onChange={(e) => handleInputChange('weightKg', e.target.value)}
+                placeholder="Enter weight in kilograms"
                 className="w-full px-4 py-3 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-white/50"
                 required
               />
             </div>
 
-            {/* Zip Code */}
+            {/* Moroccan Cities */}
             <div>
               <label className="block text-white text-sm font-medium mb-2">
-                Zip Code
+                City
               </label>
-              <input
-                type="text"
-                value={formData.zipCode}
-                onChange={(e) => handleInputChange('zipCode', e.target.value)}
-                placeholder="Enter zip code"
-                className="w-full px-4 py-3 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-white/50"
-                required
-              />
+              <div className="relative">
+                <select
+                  value={formData.city}
+                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-white/50 appearance-none"
+                  required
+                >
+                  <option value="">Select your city</option>
+                  {moroccanCities.map((city, index) => (
+                    <option key={city.name} value={city.name}>
+                      {index + 1}. {city.name} ({city.population} inhabitants)
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
             </div>
 
             {/* Nicotine Checkbox */}
