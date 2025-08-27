@@ -1,6 +1,7 @@
-# Quote Insurance Application - Requirements & Configuration
+# TwinzTech Insurance Application - Requirements & Configuration
 
 ## 🌍 **Regional Context**
+- **Company:** TwinzTech
 - **Location:** Morocco/Europe
 - **Date Format:** European (DD/MM/YYYY)
 - **Units:** Metric System

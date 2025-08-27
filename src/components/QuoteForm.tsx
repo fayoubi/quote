@@ -22,18 +22,18 @@ const QuoteForm: React.FC = () => {
     usesNicotine: false,
   });
 
-  // Top 10 Moroccan cities by population
+  // Top 10 Moroccan cities by population (ordered alphabetically for display)
   const moroccanCities = [
-    { name: 'Casablanca', population: '3,359,818' },
-    { name: 'Rabat', population: '577,827' },
-    { name: 'Fez', population: '1,112,072' },
-    { name: 'Marrakech', population: '928,850' },
-    { name: 'Agadir', population: '421,844' },
-    { name: 'Tangier', population: '947,952' },
-    { name: 'Meknes', population: '632,079' },
-    { name: 'Oujda', population: '494,252' },
-    { name: 'Kenitra', population: '431,282' },
-    { name: 'Tetouan', population: '380,787' }
+    'Agadir',
+    'Casablanca', 
+    'Fez',
+    'Kenitra',
+    'Marrakech',
+    'Meknes',
+    'Oujda',
+    'Rabat',
+    'Tangier',
+    'Tetouan'
   ];
 
   const handleInputChange = (field: keyof QuoteFormData, value: string | boolean) => {
@@ -129,8 +129,6 @@ const QuoteForm: React.FC = () => {
                 onChange={(e) => handleInputChange('birthdate', e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-white/50"
                 required
-                pattern="\d{2}/\d{2}/\d{4}"
-                placeholder="DD/MM/YYYY"
               />
               <p className="text-xs text-white/70 mt-1">European format: Day/Month/Year</p>
             </div>
@@ -202,9 +200,9 @@ const QuoteForm: React.FC = () => {
                   required
                 >
                   <option value="">Select your city</option>
-                  {moroccanCities.map((city, index) => (
-                    <option key={city.name} value={city.name}>
-                      {index + 1}. {city.name} ({city.population} inhabitants)
+                  {moroccanCities.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
                     </option>
                   ))}
                 </select>
