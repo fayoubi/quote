@@ -1,0 +1,50 @@
+name: PR Bot
+
+on:
+  workflow_dispatch:
+    inputs:
+      filename:
+        description: "Name of the file to create/update"
+        required: true
+        default: "README.md"
+      content:
+        description: "Content to put inside the file"
+        required: true
+        default: "We are creating a webservice and a simple UI that will live in the repo above."
+
+jobs:
+  open-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "quote-bot"
+          git config --global user.email "bot@quote.local"
+
+      - name: Create new branch
+        run: |
+          BRANCH="auto-pr-$(date +%s)"
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+          git checkout -b $BRANCH
+
+      - name: Write file
+        run: |
+          echo "${{ github.event.inputs.content }}" > ${{ github.event.inputs.filename }}
+          git add ${{ github.event.inputs.filename }}
+          git commit -m "Auto PR: update ${{ github.event.inputs.filename }}"
+
+      - name: Push branch
+        run: git push origin $BRANCH
+
+      - name: Open Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "Automated PR for ${{ github.event.inputs.filename }}"
+          body: "This PR was created automatically by the PR Bot workflow."
+          branch: ${{ env.BRANCH }}
+          base: main
+
