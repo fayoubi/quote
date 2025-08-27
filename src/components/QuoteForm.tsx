@@ -121,7 +121,7 @@ const QuoteForm: React.FC = () => {
             {/* Birthdate */}
             <div>
               <label className="block text-white text-sm font-medium mb-2">
-                Birthdate
+                Date of Birth (DD/MM/YYYY)
               </label>
               <input
                 type="date"
@@ -129,7 +129,10 @@ const QuoteForm: React.FC = () => {
                 onChange={(e) => handleInputChange('birthdate', e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-white/50"
                 required
+                pattern="\d{2}/\d{2}/\d{4}"
+                placeholder="DD/MM/YYYY"
               />
+              <p className="text-xs text-white/70 mt-1">European format: Day/Month/Year</p>
             </div>
 
             {/* Height in Centimeters */}
