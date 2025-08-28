@@ -4,7 +4,7 @@ import { Info, ChevronDown } from 'lucide-react';
 
 interface QuoteFormData {
   gender: 'male' | 'female';
-  birthdate: string;
+  birthdate: string; // stored as DD/MM/YYYY
   heightCm: string;
   weightKg: string;
   city: string;
@@ -41,6 +41,15 @@ const QuoteForm: React.FC = () => {
       ...prev,
       [field]: value
     }));
+  };
+
+  // Force DD/MM/YYYY formatting as the user types
+  const handleBirthdateChange = (raw: string) => {
+    // keep only digits, max 8 (ddmmyyyy)
+    const digitsOnly = raw.replace(/\D/g, '').slice(0, 8);
+    const parts = [digitsOnly.slice(0, 2), digitsOnly.slice(2, 4), digitsOnly.slice(4, 8)].filter(Boolean);
+    const formatted = parts.join('/');
+    handleInputChange('birthdate', formatted);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -124,9 +133,12 @@ const QuoteForm: React.FC = () => {
                 Date of Birth (DD/MM/YYYY)
               </label>
               <input
-                type="date"
+                type="text"
+                inputMode="numeric"
+                maxLength={10}
                 value={formData.birthdate}
-                onChange={(e) => handleInputChange('birthdate', e.target.value)}
+                onChange={(e) => handleBirthdateChange(e.target.value)}
+                placeholder="dd/mm/yyyy"
                 className="w-full px-4 py-3 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-white/50"
                 required
               />
