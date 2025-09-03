@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import QuoteForm from './components/QuoteForm';
 import QuoteDisplay from './components/QuoteDisplay';
 import Header from './components/Header';
+import ContactPage from './components/ContactPage';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Routes>
             <Route path="/" element={<QuoteForm />} />
             <Route path="/quote" element={<QuoteDisplay />} />
+            <Route path="/contact" element={<ContactPage />} />
           </Routes>
         </main>
       </div>
