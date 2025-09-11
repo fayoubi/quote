@@ -4,6 +4,7 @@ import QuoteForm from './components/QuoteForm';
 import QuoteDisplay from './components/QuoteDisplay';
 import Header from './components/Header';
 import ContactPage from './components/ContactPage';
+import InsuranceForm from './components/InsuranceForm';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<QuoteForm />} />
             <Route path="/quote" element={<QuoteDisplay />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/enroll/start" element={<InsuranceForm />} />
           </Routes>
         </main>
       </div>
