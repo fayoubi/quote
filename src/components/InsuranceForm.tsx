@@ -1,26 +1,72 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, Shield } from 'lucide-react';
+import { nationalitiesFr } from '../constants/nationalitiesFr';
+
+// Minimal French → English country mapping for the cities package
+const frToEnCountry: Record<string, string> = {
+  'Maroc': 'Morocco',
+  'France': 'France',
+  'Allemagne': 'Germany',
+  'Espagne': 'Spain',
+  'Royaume-Uni': 'United Kingdom',
+  'Italie': 'Italy',
+  'Belgique': 'Belgium',
+  'Pays-Bas': 'Netherlands',
+  'Portugal': 'Portugal',
+  'Suisse': 'Switzerland',
+  'États-Unis': 'United States',
+  'Canada': 'Canada',
+  'Algérie': 'Algeria',
+  'Tunisie': 'Tunisia',
+  'Turquie': 'Turkey',
+  'Chine': 'China',
+  'Inde': 'India',
+};
+
+const NoIcon: React.FC<{ className?: string }> = () => null;
 
 type Person = {
-  title: string;
-  nom: string;
-  prenom: string;
-  cin: string;
-  nationalite: string;
-  passport: string;
-  carteSejourTitre: string;
-  dateNaissance: string;
-  lieuNaissance: string;
-  adresse: string;
-  ville: string;
-  pays: string;
-  telephone: string;
-  profession: string;
-  situationFamiliale: string;
-  veuf: boolean;
-  nombreEnfants: string;
-  citoyenAmericain: string;
+  salutation: string;
+  lastName: string;
+  firstName: string;
+  idNumber: string;
+  nationality: string;
+  passportNumber: string;
+  residencePermit: string;
+  birthDate: string;
+  birthPlace: string;
+  address: string;
+  city: string;
+  country: string;
+  phone: string;
+  occupation: string;
+  maritalStatus: string;
+  widowed: boolean;
+  numberOfChildren: string;
+  usCitizen: string;
   tin: string;
+};
+
+const emptyPerson: Person = {
+  salutation: '',
+  lastName: '',
+  firstName: '',
+  idNumber: '',
+  nationality: '',
+  passportNumber: '',
+  residencePermit: '',
+  birthDate: '',
+  birthPlace: '',
+  address: '',
+  city: '',
+  country: '',
+  phone: '',
+  occupation: '',
+  maritalStatus: '',
+  widowed: false,
+  numberOfChildren: '',
+  usCitizen: '',
+  tin: ''
 };
 
 interface PersonSectionProps {
@@ -29,9 +75,12 @@ interface PersonSectionProps {
   section: 'subscriber' | 'insured';
   icon: React.ComponentType<{ className?: string }>;
   onChange: (section: 'subscriber' | 'insured', field: keyof Person, value: string | boolean) => void;
+  readOnly?: boolean;
+  cities: string[];
+  isLoadingCities?: boolean;
 }
 
-const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, icon: Icon, onChange }) => (
+const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, icon: Icon, onChange, readOnly, cities, isLoadingCities }) => (
   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
     <div className="flex items-center gap-3 mb-6">
       <Icon className="h-6 w-6 text-blue-600" />
@@ -39,7 +88,7 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
     </div>
     
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {/* Title Selection */}
+      {/* Civilité */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Civilité</label>
         <div className="flex gap-4">
@@ -47,11 +96,12 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
             <label key={civ} className="flex items-center">
               <input
                 type="radio"
-                name={`${section}_title`}
+                name={`${section}_salutation`}
                 value={civ}
-                checked={person.title === civ}
-                onChange={(e) => onChange(section, 'title', e.target.value)}
+                checked={person.salutation === civ}
+                onChange={(e) => !readOnly && onChange(section, 'salutation', e.target.value)}
                 className="mr-2 text-blue-600"
+                disabled={readOnly}
               />
               {civ}
             </label>
@@ -65,10 +115,12 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
         <label className="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
         <input
           type="text"
-          value={person.nom}
-          onChange={(e) => onChange(section, 'nom', e.target.value)}
+          value={person.lastName}
+          onChange={(e) => !readOnly && onChange(section, 'lastName', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
+          readOnly={readOnly}
+          aria-disabled={readOnly}
         />
       </div>
 
@@ -76,10 +128,12 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
         <label className="block text-sm font-medium text-gray-700 mb-2">Prénom *</label>
         <input
           type="text"
-          value={person.prenom}
-          onChange={(e) => onChange(section, 'prenom', e.target.value)}
+          value={person.firstName}
+          onChange={(e) => !readOnly && onChange(section, 'firstName', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
+          readOnly={readOnly}
+          aria-disabled={readOnly}
         />
       </div>
 
@@ -87,29 +141,64 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
         <label className="block text-sm font-medium text-gray-700 mb-2">Pièce d'identité (CIN)</label>
         <input
           type="text"
-          value={person.cin}
-          onChange={(e) => onChange(section, 'cin', e.target.value)}
+          value={person.idNumber}
+          onChange={(e) => !readOnly && onChange(section, 'idNumber', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          readOnly={readOnly}
+          aria-disabled={readOnly}
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Nationalité</label>
-        <input
-          type="text"
-          value={person.nationalite}
-          onChange={(e) => onChange(section, 'nationalite', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+      <div className="md:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Nationalité</label>
+          <div className="relative">
+            <select
+              value={person.nationality}
+              onChange={(e) => {
+                if (readOnly) return;
+                onChange(section, 'nationality', e.target.value);
+                onChange(section, 'city', ''); // reset city when nationality changes
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+              disabled={readOnly}
+              aria-disabled={readOnly}
+            >
+              <option value="">Sélectionnez une nationalité</option>
+              {nationalitiesFr.map(n => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Ville</label>
+          <div className="relative">
+            <select
+              value={person.city}
+              onChange={(e) => !readOnly && onChange(section, 'city', e.target.value)}
+              className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none ${!person.nationality || readOnly ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white'}`}
+              disabled={!person.nationality || readOnly || (!!person.nationality && (isLoadingCities ?? false))}
+              aria-disabled={!person.nationality || readOnly}
+            >
+              <option value="">{!person.nationality ? 'Sélectionnez une nationalité d’abord' : (isLoadingCities ? 'Chargement…' : 'Sélectionnez une ville')}</option>
+              {cities.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Passeport</label>
         <input
           type="text"
-          value={person.passport}
-          onChange={(e) => onChange(section, 'passport', e.target.value)}
+          value={person.passportNumber}
+          onChange={(e) => !readOnly && onChange(section, 'passportNumber', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          readOnly={readOnly}
+          aria-disabled={readOnly}
         />
       </div>
 
@@ -117,9 +206,11 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
         <label className="block text-sm font-medium text-gray-700 mb-2">Carte/Titre de séjour</label>
         <input
           type="text"
-          value={person.carteSejourTitre}
-          onChange={(e) => onChange(section, 'carteSejourTitre', e.target.value)}
+          value={person.residencePermit}
+          onChange={(e) => !readOnly && onChange(section, 'residencePermit', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          readOnly={readOnly}
+          aria-disabled={readOnly}
         />
       </div>
 
@@ -127,9 +218,11 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
         <label className="block text-sm font-medium text-gray-700 mb-2">Date de naissance</label>
         <input
           type="date"
-          value={person.dateNaissance}
-          onChange={(e) => onChange(section, 'dateNaissance', e.target.value)}
+          value={person.birthDate}
+          onChange={(e) => !readOnly && onChange(section, 'birthDate', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          readOnly={readOnly}
+          aria-disabled={readOnly}
         />
       </div>
 
@@ -137,9 +230,11 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
         <label className="block text-sm font-medium text-gray-700 mb-2">Lieu de naissance</label>
         <input
           type="text"
-          value={person.lieuNaissance}
-          onChange={(e) => onChange(section, 'lieuNaissance', e.target.value)}
+          value={person.birthPlace}
+          onChange={(e) => !readOnly && onChange(section, 'birthPlace', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          readOnly={readOnly}
+          aria-disabled={readOnly}
         />
       </div>
 
@@ -147,19 +242,11 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
         <label className="block text-sm font-medium text-gray-700 mb-2">Adresse</label>
         <input
           type="text"
-          value={person.adresse}
-          onChange={(e) => onChange(section, 'adresse', e.target.value)}
+          value={person.address}
+          onChange={(e) => !readOnly && onChange(section, 'address', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Ville</label>
-        <input
-          type="text"
-          value={person.ville}
-          onChange={(e) => onChange(section, 'ville', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          readOnly={readOnly}
+          aria-disabled={readOnly}
         />
       </div>
 
@@ -167,9 +254,11 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
         <label className="block text-sm font-medium text-gray-700 mb-2">Pays</label>
         <input
           type="text"
-          value={person.pays}
-          onChange={(e) => onChange(section, 'pays', e.target.value)}
+          value={person.country}
+          onChange={(e) => !readOnly && onChange(section, 'country', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          readOnly={readOnly}
+          aria-disabled={readOnly}
         />
       </div>
 
@@ -177,9 +266,11 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
         <label className="block text-sm font-medium text-gray-700 mb-2">N° téléphone</label>
         <input
           type="tel"
-          value={person.telephone}
-          onChange={(e) => onChange(section, 'telephone', e.target.value)}
+          value={person.phone}
+          onChange={(e) => !readOnly && onChange(section, 'phone', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          readOnly={readOnly}
+          aria-disabled={readOnly}
         />
       </div>
 
@@ -187,24 +278,31 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
         <label className="block text-sm font-medium text-gray-700 mb-2">Profession exacte</label>
         <input
           type="text"
-          value={person.profession}
-          onChange={(e) => onChange(section, 'profession', e.target.value)}
+          value={person.occupation}
+          onChange={(e) => !readOnly && onChange(section, 'occupation', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          readOnly={readOnly}
+          aria-disabled={readOnly}
         />
       </div>
 
       <div className="md:col-span-3">
         <label className="block text-sm font-medium text-gray-700 mb-2">Situation familiale</label>
         <div className="flex gap-6">
-          {['Célibataire', 'Marié(e)', 'Divorcé(e)'].map(status => (
+          {['Célibataire', 'Marié(e)', 'Divorcé(e)', 'Veuf (ve)'].map(status => (
             <label key={status} className="flex items-center">
               <input
                 type="radio"
-                name={`${section}_situation`}
+                name={`${section}_maritalStatus`}
                 value={status}
-                checked={person.situationFamiliale === status}
-                onChange={(e) => onChange(section, 'situationFamiliale', e.target.value)}
+                checked={person.maritalStatus === status}
+                onChange={(e) => {
+                  if (readOnly) return;
+                  onChange(section, 'maritalStatus', e.target.value);
+                  onChange(section, 'widowed', e.target.value === 'Veuf (ve)');
+                }}
                 className="mr-2 text-blue-600"
+                disabled={readOnly}
               />
               {status}
             </label>
@@ -213,74 +311,67 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
       </div>
 
       <div>
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={person.veuf}
-            onChange={(e) => onChange(section, 'veuf', e.target.checked)}
-            className="mr-2 text-blue-600"
-          />
-          Veuf (ve)
-        </label>
-      </div>
-
-      <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Nombre d'enfants</label>
         <input
           type="number"
-          value={person.nombreEnfants}
-          onChange={(e) => onChange(section, 'nombreEnfants', e.target.value)}
+          value={person.numberOfChildren}
+          onChange={(e) => !readOnly && onChange(section, 'numberOfChildren', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          readOnly={readOnly}
+          aria-disabled={readOnly}
         />
       </div>
 
-      <div className="md:col-span-3 bg-blue-50 p-4 rounded-lg">
-        <p className="text-sm font-medium text-blue-800 mb-3">
-          Êtes-vous citoyen américain ou avez-vous votre résidence fiscale aux États-Unis ?*
+      <div className="md:col-span-3 p-0">
+        <p className="text-sm font-medium text-gray-700 mb-3">
+          Êtes-vous citoyen américain ou avez-vous votre résidence fiscale aux États-Unis ?
         </p>
         <div className="flex gap-4 mb-3">
           {['Oui', 'Non'].map(option => (
             <label key={option} className="flex items-center">
               <input
                 type="radio"
-                name={`${section}_citizen`}
+                name={`${section}_usCitizen`}
                 value={option}
-                checked={person.citoyenAmericain === option}
-                onChange={(e) => onChange(section, 'citoyenAmericain', e.target.value)}
+                checked={person.usCitizen === option}
+                onChange={(e) => !readOnly && onChange(section, 'usCitizen', e.target.value)}
                 className="mr-2 text-blue-600"
+                disabled={readOnly}
               />
               {option}
             </label>
           ))}
         </div>
-        <p className="text-xs text-blue-600 mb-2">
-          *Si oui, veuillez remplir et signer les annexes complémentaires FATCA
-        </p>
-        <div>
-          <label className="block text-sm font-medium text-blue-800 mb-2">
-            Numéro d'identification fiscale (TIN)
-          </label>
-          <input
-            type="text"
-            value={person.tin}
-            onChange={(e) => onChange(section, 'tin', e.target.value)}
-            className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+        {person.usCitizen === 'Oui' && (
+          <div className="mt-2 ml-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Numéro d'identification fiscale (TIN)
+            </label>
+            <input
+              type="text"
+              value={person.tin}
+              onChange={(e) => !readOnly && onChange(section, 'tin', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              readOnly={readOnly}
+              aria-disabled={readOnly}
+            />
+          </div>
+        )}
       </div>
     </div>
   </div>
 );
 
 const InsuranceForm: React.FC = () => {
+  const [insuredSameAsSubscriber, setInsuredSameAsSubscriber] = useState<boolean>(true);
   const [formData, setFormData] = useState<{ subscriber: Person; insured: Person }>({
-    subscriber: {
-      title: '', nom: '', prenom: '', cin: '', nationalite: '', passport: '', carteSejourTitre: '', dateNaissance: '', lieuNaissance: '', adresse: '', ville: '', pays: '', telephone: '', profession: '', situationFamiliale: '', veuf: false, nombreEnfants: '', citoyenAmericain: '', tin: ''
-    },
-    insured: {
-      title: '', nom: '', prenom: '', cin: '', nationalite: '', passport: '', carteSejourTitre: '', dateNaissance: '', lieuNaissance: '', adresse: '', ville: '', pays: '', telephone: '', profession: '', situationFamiliale: '', veuf: false, nombreEnfants: '', citoyenAmericain: '', tin: ''
-    }
+    subscriber: { ...emptyPerson },
+    insured: { ...emptyPerson }
   });
+  const [lastManualInsured, setLastManualInsured] = useState<Person | null>(null);
+  const [citiesSubscriber, setCitiesSubscriber] = useState<string[]>([]);
+  const [citiesInsured, setCitiesInsured] = useState<string[]>([]);
+  const [loadingCities, setLoadingCities] = useState<{ subscriber: boolean; insured: boolean }>({ subscriber: false, insured: false });
 
   const handleInputChange = (section: 'subscriber' | 'insured', field: keyof Person, value: string | boolean) => {
     setFormData(prev => ({
@@ -290,6 +381,55 @@ const InsuranceForm: React.FC = () => {
         [field]: value as never
       }
     }));
+    if (section === 'insured' && !insuredSameAsSubscriber) {
+      setLastManualInsured(prev => ({ ...(prev ?? emptyPerson), [field]: value } as Person));
+    }
+  };
+
+  // Sync insured with subscriber when the toggle is ON
+  useEffect(() => {
+    if (insuredSameAsSubscriber) {
+      setFormData(prev => ({ ...prev, insured: { ...prev.subscriber } }));
+      // Also mirror cities options to insured
+      setCitiesInsured(citiesSubscriber);
+    }
+  }, [insuredSameAsSubscriber, formData.subscriber, citiesSubscriber]);
+
+  // Lazy-load cities when nationality changes
+  useEffect(() => {
+    const nat = formData.subscriber.nationality;
+    if (!nat) { setCitiesSubscriber([]); return; }
+    const en = frToEnCountry[nat] ?? nat;
+    setLoadingCities(prev => ({ ...prev, subscriber: true }));
+    import('country-city').then(mod => {
+      const list: string[] = (mod as any).getCities ? (mod as any).getCities(en) : [];
+      setCitiesSubscriber(Array.isArray(list) ? list : []);
+    }).catch(() => setCitiesSubscriber([])).finally(() => setLoadingCities(prev => ({ ...prev, subscriber: false })));
+  }, [formData.subscriber.nationality]);
+
+  useEffect(() => {
+    if (insuredSameAsSubscriber) { return; }
+    const nat = formData.insured.nationality;
+    if (!nat) { setCitiesInsured([]); return; }
+    const en = frToEnCountry[nat] ?? nat;
+    setLoadingCities(prev => ({ ...prev, insured: true }));
+    import('country-city').then(mod => {
+      const list: string[] = (mod as any).getCities ? (mod as any).getCities(en) : [];
+      setCitiesInsured(Array.isArray(list) ? list : []);
+    }).catch(() => setCitiesInsured([])).finally(() => setLoadingCities(prev => ({ ...prev, insured: false })));
+  }, [formData.insured.nationality, insuredSameAsSubscriber]);
+
+  const handleToggleInsuredSame = (value: 'Oui' | 'Non') => {
+    if (value === 'Oui') {
+      // Snapshot current manual insured before overwriting
+      setLastManualInsured(formData.insured);
+      setInsuredSameAsSubscriber(true);
+      setFormData(prev => ({ ...prev, insured: { ...prev.subscriber } }));
+    } else {
+      setInsuredSameAsSubscriber(false);
+      // Restore last manual insured if available
+      setFormData(prev => ({ ...prev, insured: lastManualInsured ? { ...lastManualInsured } : { ...emptyPerson } }));
+    }
   };
 
   return (
@@ -310,15 +450,49 @@ const InsuranceForm: React.FC = () => {
             section="subscriber"
             icon={User}
             onChange={handleInputChange}
+            cities={citiesSubscriber}
+            isLoadingCities={loadingCities.subscriber}
           />
 
-          <PersonSection 
-            title="Assuré" 
-            person={formData.insured} 
-            section="insured"
-            icon={Shield}
-            onChange={handleInputChange}
-          />
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Shield className="h-6 w-6 text-blue-600" />
+              <h2 className="text-xl font-semibold text-gray-800">Assuré</h2>
+            </div>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">L’assuré est le même que le souscripteur ?</label>
+              <div className="flex gap-6">
+                {['Oui', 'Non'].map(opt => (
+                  <label key={opt} className="flex items-center">
+                    <input
+                      type="radio"
+                      name="insured_same"
+                      value={opt}
+                      checked={insuredSameAsSubscriber ? opt === 'Oui' : opt === 'Non'}
+                      onChange={(e) => handleToggleInsuredSame(e.target.value as 'Oui' | 'Non')}
+                      className="mr-2 text-blue-600"
+                    />
+                    {opt}
+                  </label>
+                ))}
+              </div>
+              {insuredSameAsSubscriber && (
+                <p className="text-xs text-blue-700 mt-2">Cette section est synchronisée avec le souscripteur et n’est pas modifiable.</p>
+              )}
+            </div>
+            <div className={insuredSameAsSubscriber ? 'opacity-60 transition-opacity' : ''} aria-disabled={insuredSameAsSubscriber}>
+              <PersonSection
+                title=""
+                person={formData.insured}
+                section="insured"
+                icon={NoIcon}
+                onChange={handleInputChange}
+                cities={insuredSameAsSubscriber ? citiesSubscriber : citiesInsured}
+                isLoadingCities={insuredSameAsSubscriber ? loadingCities.subscriber : loadingCities.insured}
+                readOnly={insuredSameAsSubscriber}
+              />
+            </div>
+          </div>
 
           <div className="flex justify-center space-x-4">
             <button
