@@ -107,7 +107,7 @@ const QuoteDisplay: React.FC = () => {
       {/* Start Application Button */}
       <div className="px-4 pb-8">
         <button
-          onClick={() => console.log('Start application clicked')}
+          onClick={() => navigate('/enroll/start')}
           className="w-full bg-accent-500 hover:bg-accent-600 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200"
         >
           Start application
