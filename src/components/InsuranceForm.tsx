@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { User, Shield } from 'lucide-react';
+import { User, Shield, Camera, CheckCircle, AlertTriangle } from 'lucide-react';
 import { nationalitiesFr } from '../constants/nationalitiesFr';
+import IDScanner from './IDScanner';
+import { IDScanResult } from '../types/idScanner';
+import { FieldMappingService } from '../services/FieldMappingService';
 
 // Minimal French → English country mapping for the cities package
 const frToEnCountry: Record<string, string> = {
@@ -78,13 +81,25 @@ interface PersonSectionProps {
   readOnly?: boolean;
   cities: string[];
   isLoadingCities?: boolean;
+  onIDScan?: (section: 'subscriber' | 'insured') => void;
 }
 
-const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, icon: Icon, onChange, readOnly, cities, isLoadingCities }) => (
+const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, icon: Icon, onChange, readOnly, cities, isLoadingCities, onIDScan }) => (
   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-    <div className="flex items-center gap-3 mb-6">
-      <Icon className="h-6 w-6 text-blue-600" />
-      <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+    <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center gap-3">
+        <Icon className="h-6 w-6 text-blue-600" />
+        <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+      </div>
+      {onIDScan && !readOnly && (
+        <button
+          onClick={() => onIDScan(section)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+        >
+          <Camera className="h-4 w-4" />
+          Scanner CIN
+        </button>
+      )}
     </div>
     
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -372,6 +387,9 @@ const InsuranceForm: React.FC = () => {
   const [citiesSubscriber, setCitiesSubscriber] = useState<string[]>([]);
   const [citiesInsured, setCitiesInsured] = useState<string[]>([]);
   const [loadingCities, setLoadingCities] = useState<{ subscriber: boolean; insured: boolean }>({ subscriber: false, insured: false });
+  const [showIDScanner, setShowIDScanner] = useState<boolean>(false);
+  const [scanResult, setScanResult] = useState<IDScanResult | null>(null);
+  const [scanningFor, setScanningFor] = useState<'subscriber' | 'insured'>('subscriber');
 
   const handleInputChange = (section: 'subscriber' | 'insured', field: keyof Person, value: string | boolean) => {
     setFormData(prev => ({
@@ -432,6 +450,43 @@ const InsuranceForm: React.FC = () => {
     }
   };
 
+  const handleIDScan = (section: 'subscriber' | 'insured') => {
+    setScanningFor(section);
+    setShowIDScanner(true);
+    setScanResult(null);
+  };
+
+  const handleScanComplete = (result: IDScanResult) => {
+    setScanResult(result);
+
+    if (result.success && result.extractedData) {
+      const mappedData = FieldMappingService.mapExtractedDataToPerson(
+        result.extractedData,
+        formData[scanningFor]
+      );
+
+      setFormData(prev => ({
+        ...prev,
+        [scanningFor]: {
+          ...prev[scanningFor],
+          ...mappedData
+        }
+      }));
+
+      // If scanning for insured and it's currently synced, break the sync
+      if (scanningFor === 'insured' && insuredSameAsSubscriber) {
+        setInsuredSameAsSubscriber(false);
+      }
+    }
+
+    setShowIDScanner(false);
+  };
+
+  const handleScanCancel = () => {
+    setShowIDScanner(false);
+    setScanResult(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -444,14 +499,15 @@ const InsuranceForm: React.FC = () => {
         </div>
 
         <div className="space-y-8">
-          <PersonSection 
-            title="Souscripteur" 
-            person={formData.subscriber} 
+          <PersonSection
+            title="Souscripteur"
+            person={formData.subscriber}
             section="subscriber"
             icon={User}
             onChange={handleInputChange}
             cities={citiesSubscriber}
             isLoadingCities={loadingCities.subscriber}
+            onIDScan={handleIDScan}
           />
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -490,6 +546,7 @@ const InsuranceForm: React.FC = () => {
                 cities={insuredSameAsSubscriber ? citiesSubscriber : citiesInsured}
                 isLoadingCities={insuredSameAsSubscriber ? loadingCities.subscriber : loadingCities.insured}
                 readOnly={insuredSameAsSubscriber}
+                onIDScan={handleIDScan}
               />
             </div>
           </div>
@@ -508,7 +565,71 @@ const InsuranceForm: React.FC = () => {
               Suivant
             </button>
           </div>
+
+          {/* Scan Result Display */}
+          {scanResult && scanResult.success && scanResult.extractedData && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-6 w-6 text-green-600 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-green-800 mb-2">
+                    Scanner terminé avec succès
+                  </h3>
+                  <p className="text-sm text-green-700 mb-3">
+                    {scanResult.fileCount && scanResult.fileCount > 1
+                      ? `Les données de ${scanResult.fileCount} fichiers ont été traitées et appliquées`
+                      : 'Les données suivantes ont été extraites et appliquées'
+                    } au formulaire {scanningFor === 'subscriber' ? 'du souscripteur' : 'de l\'assuré'} :
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                    {FieldMappingService.generateScanSummary(scanResult.extractedData).map((item, index) => (
+                      <div key={index} className="text-green-600">• {item}</div>
+                    ))}
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-sm text-green-600">
+                      Niveau de confiance:
+                      <span className={`ml-1 font-medium ${FieldMappingService.getConfidenceLevelColor(FieldMappingService.getConfidenceLevel(scanResult.extractedData))}`}>
+                        {FieldMappingService.getConfidenceLevelText(FieldMappingService.getConfidenceLevel(scanResult.extractedData))}
+                      </span>
+                      ({Math.round(scanResult.extractedData.confidence * 100)}%)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {scanResult && !scanResult.success && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-6 w-6 text-red-600 mt-0.5" />
+                <div>
+                  <h3 className="text-lg font-semibold text-red-800 mb-2">
+                    Erreur lors du scan
+                  </h3>
+                  <p className="text-sm text-red-700">
+                    {scanResult.error || 'Une erreur inconnue s\'est produite lors du traitement de votre document.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* ID Scanner Modal */}
+        {showIDScanner && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <IDScanner
+                onScanComplete={handleScanComplete}
+                onCancel={handleScanCancel}
+                defaultIdType="moroccan_cin"
+                className="border-0 shadow-none"
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
