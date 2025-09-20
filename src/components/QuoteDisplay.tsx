@@ -17,6 +17,8 @@ const QuoteDisplay: React.FC = () => {
   const [coverageYears, setCoverageYears] = useState<10 | 20>(20);
   const [coverageAmount, setCoverageAmount] = useState(500000);
   const [isUpdatingQuote, setIsUpdatingQuote] = useState(false);
+  // Track if we've initialized the state to prevent resetting user selections
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const formatCurrency = (amount: number) => {
     if (amount >= 1000000) {
@@ -34,13 +36,20 @@ const QuoteDisplay: React.FC = () => {
     }
   }, [formData, currentQuote, navigate]);
 
-  // Initialize state from current quote
+  // Initialize state from current quote (only on first load)
+  // FIX: Prevents slider from resetting after each API update
   useEffect(() => {
-    if (currentQuote) {
-      setCoverageYears(currentQuote.pricing ? 20 : 20); // Default from pricing service
-      setCoverageAmount(500000); // Will be updated based on actual quote
+    if (currentQuote && !isInitialized) {
+      // Initialize with defaults on first load only
+      // This prevents resetting user selections when new quotes arrive
+      const initialCoverageAmount = 500000; // Start with default
+      const initialTermLength = 20; // Start with 20-year term
+
+      setCoverageAmount(initialCoverageAmount);
+      setCoverageYears(initialTermLength);
+      setIsInitialized(true);
     }
-  }, [currentQuote]);
+  }, [currentQuote, isInitialized]);
 
   const updateQuote = async (newCoverageAmount: number, newCoverageYears: 10 | 20) => {
     if (!formData) return;
