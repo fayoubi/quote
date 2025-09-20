@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Info, ChevronDown } from 'lucide-react';
+import { Info, ChevronDown, Loader2 } from 'lucide-react';
+import { useQuote } from '../context/QuoteContext';
+import { pricingService, PricingService } from '../services/PricingService';
 
 interface QuoteFormData {
   gender: 'male' | 'female';
@@ -13,6 +15,15 @@ interface QuoteFormData {
 
 const QuoteForm: React.FC = () => {
   const navigate = useNavigate();
+  const {
+    setFormData: setQuoteFormData,
+    setCurrentQuote,
+    isCalculatingQuote,
+    setIsCalculatingQuote,
+    quoteError,
+    setQuoteError
+  } = useQuote();
+
   const [formData, setFormData] = useState<QuoteFormData>({
     gender: 'male',
     birthdate: '',
@@ -52,18 +63,81 @@ const QuoteForm: React.FC = () => {
     handleInputChange('birthdate', formatted);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = (): string | null => {
+    if (!formData.birthdate.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+      return 'Please enter a valid birth date in DD/MM/YYYY format';
+    }
+
+    if (!formData.heightCm) {
+      return 'Please select your height';
+    }
+
+    if (!formData.weightKg || parseInt(formData.weightKg) < 35 || parseInt(formData.weightKg) > 200) {
+      return 'Please enter a valid weight between 35-200 kg';
+    }
+
+    if (!formData.city) {
+      return 'Please select your city';
+    }
+
+    // Check if age is within valid range (18-75)
+    const [day, month, year] = formData.birthdate.split('/').map(Number);
+    const birthDate = new Date(year, month - 1, day);
+    const age = Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+
+    if (age < 18) {
+      return 'You must be at least 18 years old to get a quote';
+    }
+
+    if (age > 75) {
+      return 'Unfortunately, we cannot provide quotes for applicants over 75 years old';
+    }
+
+    return null;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically send the data to your backend
-    console.log('Form submitted with metric units:', {
-      gender: formData.gender,
-      birthdate: formData.birthdate,
-      heightCm: formData.heightCm,
-      weightKg: formData.weightKg,
-      city: formData.city,
-      usesNicotine: formData.usesNicotine
-    });
-    navigate('/quote');
+
+    // Clear any previous errors
+    setQuoteError(null);
+
+    // Validate form
+    const validationError = validateForm();
+    if (validationError) {
+      setQuoteError(validationError);
+      return;
+    }
+
+    try {
+      setIsCalculatingQuote(true);
+
+      // Convert form data to pricing request format
+      const pricingRequest = PricingService.convertFormDataToPricingRequest(formData, {
+        termLength: 20, // Default to 20 years initially
+        coverageAmount: 500000 // Default to $500K initially
+      });
+
+      // Call pricing service
+      const quoteResponse = await pricingService.calculateQuote(pricingRequest);
+
+      // Store the form data and quote in context
+      setQuoteFormData(formData);
+      setCurrentQuote(quoteResponse.quote);
+
+      // Navigate to quote display
+      navigate('/quote');
+
+    } catch (error) {
+      console.error('Error calculating quote:', error);
+      setQuoteError(
+        error instanceof Error
+          ? error.message
+          : 'Unable to calculate quote. Please try again.'
+      );
+    } finally {
+      setIsCalculatingQuote(false);
+    }
   };
 
   return (
@@ -92,6 +166,13 @@ const QuoteForm: React.FC = () => {
 
         {/* Right Section - Form */}
         <div className="bg-primary-900 rounded-xl p-6">
+          {/* Error Message */}
+          {quoteError && (
+            <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              {quoteError}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Gender Selection */}
             <div>
@@ -239,9 +320,17 @@ const QuoteForm: React.FC = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-accent-500 hover:bg-accent-600 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200"
+              disabled={isCalculatingQuote}
+              className="w-full bg-accent-500 hover:bg-accent-600 disabled:bg-accent-300 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
             >
-              Continue for no exam quote
+              {isCalculatingQuote ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Calculating your quote...
+                </>
+              ) : (
+                'Continue for no exam quote'
+              )}
             </button>
           </form>
         </div>
