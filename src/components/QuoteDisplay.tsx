@@ -11,7 +11,8 @@ const QuoteDisplay: React.FC = () => {
     currentQuote,
     setCurrentQuote,
     quoteError,
-    setQuoteError
+    setQuoteError,
+    prepopulationUtils
   } = useQuote();
 
   const [coverageYears, setCoverageYears] = useState<10 | 20>(20);
@@ -247,7 +248,12 @@ const QuoteDisplay: React.FC = () => {
       {/* Start Application Button */}
       <div className="px-4 pb-8">
         <button
-          onClick={() => navigate('/enroll/start')}
+          onClick={() => {
+            // Store prepopulation data before navigating
+            const prepopulationData = prepopulationUtils.createPrepopulationData(formData);
+            prepopulationUtils.storePrepopulationData(prepopulationData);
+            navigate('/enroll/start');
+          }}
           className="w-full bg-accent-500 hover:bg-accent-600 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200"
         >
           Start application

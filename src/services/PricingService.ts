@@ -4,8 +4,8 @@ export class PricingService {
   private baseUrl: string;
 
   constructor() {
-    // Default to local pricing service, can be overridden via environment variable
-    this.baseUrl = process.env.REACT_APP_PRICING_SERVICE_URL || 'http://localhost:3000';
+    // Default to local pricing service on port 3001, can be overridden via environment variable
+    this.baseUrl = process.env.REACT_APP_PRICING_SERVICE_URL || 'http://localhost:3001';
   }
 
   /**
@@ -22,8 +22,21 @@ export class PricingService {
       });
 
       if (!response.ok) {
-        const errorData: ApiError = await response.json();
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        try {
+          const errorData: ApiError = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (jsonError) {
+          // If response is not JSON (e.g., HTML error page), use status text
+          console.warn('Non-JSON error response received:', jsonError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Check if response is actually JSON before parsing
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error(`Expected JSON response, but received ${contentType || 'unknown content type'}`);
       }
 
       const data: QuoteResponse = await response.json();
@@ -50,8 +63,21 @@ export class PricingService {
       });
 
       if (!response.ok) {
-        const errorData: ApiError = await response.json();
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        try {
+          const errorData: ApiError = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (jsonError) {
+          // If response is not JSON (e.g., HTML error page), use status text
+          console.warn('Non-JSON error response received:', jsonError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Check if response is actually JSON before parsing
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error(`Expected JSON response, but received ${contentType || 'unknown content type'}`);
       }
 
       const data: { quote: QuoteResponse['quote'] } = await response.json();

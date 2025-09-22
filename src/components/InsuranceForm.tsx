@@ -4,6 +4,7 @@ import { nationalitiesFr } from '../constants/nationalitiesFr';
 import IDScanner from './IDScanner';
 import { IDScanResult } from '../types/idScanner';
 import { FieldMappingService } from '../services/FieldMappingService';
+import { useQuote } from '../context/QuoteContext';
 
 // Minimal French → English country mapping for the cities package
 const frToEnCountry: Record<string, string> = {
@@ -82,9 +83,13 @@ interface PersonSectionProps {
   cities: string[];
   isLoadingCities?: boolean;
   onIDScan?: (section: 'subscriber' | 'insured') => void;
+  prepopulatedFields?: Set<string>;
 }
 
-const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, icon: Icon, onChange, readOnly, cities, isLoadingCities, onIDScan }) => (
+const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, icon: Icon, onChange, readOnly, cities, isLoadingCities, onIDScan, prepopulatedFields }) => {
+  const isFieldPrepopulated = (fieldName: string) => prepopulatedFields?.has(fieldName) ?? false;
+
+  return (
   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
@@ -187,16 +192,31 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Ville</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Ville
+            {isFieldPrepopulated('city') && (
+              <span className="ml-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">Pré-rempli depuis votre devis</span>
+            )}
+          </label>
           <div className="relative">
             <select
               value={person.city}
               onChange={(e) => !readOnly && onChange(section, 'city', e.target.value)}
-              className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none ${!person.nationality || readOnly ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white'}`}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none ${
+                !person.nationality || readOnly ? 'bg-gray-100 text-gray-500 cursor-not-allowed' :
+                isFieldPrepopulated('city') ? 'border-blue-300 bg-blue-50' : 'border-gray-300 bg-white'
+              }`}
               disabled={!person.nationality || readOnly || (!!person.nationality && (isLoadingCities ?? false))}
               aria-disabled={!person.nationality || readOnly}
             >
-              <option value="">{!person.nationality ? 'Sélectionnez une nationalité d’abord' : (isLoadingCities ? 'Chargement…' : 'Sélectionnez une ville')}</option>
+              <option value="">
+                {!person.nationality
+                  ? 'Sélectionnez une nationalité d\'abord'
+                  : isLoadingCities
+                    ? 'Chargement...'
+                    : 'Sélectionnez une ville'
+                }
+              </option>
               {cities.map(c => (
                 <option key={c} value={c}>{c}</option>
               ))}
@@ -230,12 +250,19 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Date de naissance</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Date de naissance
+          {isFieldPrepopulated('birthDate') && (
+            <span className="ml-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">Pré-rempli depuis votre devis</span>
+          )}
+        </label>
         <input
           type="date"
           value={person.birthDate}
           onChange={(e) => !readOnly && onChange(section, 'birthDate', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            isFieldPrepopulated('birthDate') ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
+          }`}
           readOnly={readOnly}
           aria-disabled={readOnly}
         />
@@ -375,9 +402,11 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
       </div>
     </div>
   </div>
-);
+  );
+};
 
 const InsuranceForm: React.FC = () => {
+  const { prepopulationUtils } = useQuote();
   const [insuredSameAsSubscriber, setInsuredSameAsSubscriber] = useState<boolean>(true);
   const [formData, setFormData] = useState<{ subscriber: Person; insured: Person }>({
     subscriber: { ...emptyPerson },
@@ -390,6 +419,10 @@ const InsuranceForm: React.FC = () => {
   const [showIDScanner, setShowIDScanner] = useState<boolean>(false);
   const [scanResult, setScanResult] = useState<IDScanResult | null>(null);
   const [scanningFor, setScanningFor] = useState<'subscriber' | 'insured'>('subscriber');
+  const [prepopulatedFields, setPrepopulatedFields] = useState<{ subscriber: Set<string>; insured: Set<string> }>({
+    subscriber: new Set(),
+    insured: new Set()
+  });
 
   const handleInputChange = (section: 'subscriber' | 'insured', field: keyof Person, value: string | boolean) => {
     setFormData(prev => ({
@@ -402,7 +435,48 @@ const InsuranceForm: React.FC = () => {
     if (section === 'insured' && !insuredSameAsSubscriber) {
       setLastManualInsured(prev => ({ ...(prev ?? emptyPerson), [field]: value } as Person));
     }
+
+    // Remove field from prepopulated set when user manually changes it
+    setPrepopulatedFields(prev => ({
+      ...prev,
+      [section]: new Set(Array.from(prev[section]).filter(f => f !== field))
+    }));
   };
+
+  // Load prepopulation data on component mount
+  useEffect(() => {
+    const prepopulationData = prepopulationUtils.getPrepopulationData();
+
+    if (prepopulationData.dateOfBirth || prepopulationData.city) {
+      const updatedSubscriber = { ...emptyPerson };
+      const fieldsToMark = new Set<string>();
+
+      if (prepopulationData.dateOfBirth) {
+        updatedSubscriber.birthDate = prepopulationData.dateOfBirth;
+        fieldsToMark.add('birthDate');
+      }
+
+      if (prepopulationData.city) {
+        updatedSubscriber.city = prepopulationData.city;
+        fieldsToMark.add('city');
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        subscriber: updatedSubscriber,
+        insured: insuredSameAsSubscriber ? updatedSubscriber : prev.insured
+      }));
+
+      setPrepopulatedFields(prev => ({
+        ...prev,
+        subscriber: fieldsToMark,
+        insured: insuredSameAsSubscriber ? fieldsToMark : prev.insured
+      }));
+
+      // Clear prepopulation data after use
+      prepopulationUtils.clearPrepopulationData();
+    }
+  }, [prepopulationUtils, insuredSameAsSubscriber]);
 
   // Sync insured with subscriber when the toggle is ON
   useEffect(() => {
@@ -410,6 +484,11 @@ const InsuranceForm: React.FC = () => {
       setFormData(prev => ({ ...prev, insured: { ...prev.subscriber } }));
       // Also mirror cities options to insured
       setCitiesInsured(citiesSubscriber);
+      // Mirror prepopulated fields
+      setPrepopulatedFields(prev => ({
+        ...prev,
+        insured: new Set(Array.from(prev.subscriber))
+      }));
     }
   }, [insuredSameAsSubscriber, formData.subscriber, citiesSubscriber]);
 
@@ -508,6 +587,7 @@ const InsuranceForm: React.FC = () => {
             cities={citiesSubscriber}
             isLoadingCities={loadingCities.subscriber}
             onIDScan={handleIDScan}
+            prepopulatedFields={prepopulatedFields.subscriber}
           />
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -547,6 +627,7 @@ const InsuranceForm: React.FC = () => {
                 isLoadingCities={insuredSameAsSubscriber ? loadingCities.subscriber : loadingCities.insured}
                 readOnly={insuredSameAsSubscriber}
                 onIDScan={handleIDScan}
+                prepopulatedFields={prepopulatedFields.insured}
               />
             </div>
           </div>

@@ -1,4 +1,9 @@
 import React, { useMemo, useState } from 'react';
+import Card from './ui/Card';
+import FormField from './ui/FormField';
+import Input from './ui/Input';
+import Select from './ui/Select';
+import Button from './ui/Button';
 
 interface ContactFormData {
   firstName: string;
@@ -74,58 +79,54 @@ const ContactPage: React.FC = () => {
       <h1 className="text-3xl font-semibold text-gray-900 mb-6">Contact TwinzTech</h1>
       <p className="text-gray-600 mb-8">We are based in Europe. Please include your country code in the phone number (e.g. +33, +49, +34). Fields marked with * are required.</p>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-xl shadow">
-        <div>
-          <label className="block text-sm text-gray-700 mb-2">First name *</label>
-          <input className="input-field" value={form.firstName} onChange={(e)=>update('firstName', e.target.value)} required />
-        </div>
-        <div>
-          <label className="block text-sm text-gray-700 mb-2">Last name *</label>
-          <input className="input-field" value={form.lastName} onChange={(e)=>update('lastName', e.target.value)} required />
-        </div>
+      <Card className="p-6">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField label="First name" required>
+            <Input value={form.firstName} onChange={(e)=>update('firstName', e.target.value)} required />
+          </FormField>
+          <FormField label="Last name" required>
+            <Input value={form.lastName} onChange={(e)=>update('lastName', e.target.value)} required />
+          </FormField>
 
-        <div>
-          <label className="block text-sm text-gray-700 mb-2">Email *</label>
-          <input type="email" className="input-field" value={form.email} onChange={(e)=>update('email', e.target.value)} required />
-        </div>
-        <div>
-          <label className="block text-sm text-gray-700 mb-2">Company *</label>
-          <input className="input-field" value={form.company} onChange={(e)=>update('company', e.target.value)} required />
-        </div>
+          <FormField label="Email" required>
+            <Input type="email" value={form.email} onChange={(e)=>update('email', e.target.value)} required />
+          </FormField>
+          <FormField label="Company" required>
+            <Input value={form.company} onChange={(e)=>update('company', e.target.value)} required />
+          </FormField>
 
-        <div>
-          <label className="block text-sm text-gray-700 mb-2">Phone (incl. country code)</label>
-          <input className="input-field" inputMode="tel" placeholder="e.g. +44 20 7946 0958" value={form.phone} onChange={(e)=>update('phone', e.target.value)} />
-        </div>
-        <div>
-          <label className="block text-sm text-gray-700 mb-2">Your role/function</label>
-          <input className="input-field" value={form.role} onChange={(e)=>update('role', e.target.value)} />
-        </div>
+          <FormField label="Phone (incl. country code)">
+            <Input inputMode="tel" placeholder="e.g. +44 20 7946 0958" value={form.phone} onChange={(e)=>update('phone', e.target.value)} />
+          </FormField>
+          <FormField label="Your role/function">
+            <Input value={form.role} onChange={(e)=>update('role', e.target.value)} />
+          </FormField>
 
-        <div className="md:col-span-2">
-          <label className="block text-sm text-gray-700 mb-2">Interested in connecting with *</label>
-          <div className="relative">
-            <select className="input-field appearance-none" value={form.topic} onChange={(e)=>update('topic', e.target.value)} required>
-              <option value="">Please select</option>
-              {topics.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
+          <div className="md:col-span-2">
+            <FormField label="Interested in connecting with" required>
+              <Select value={form.topic} onChange={(e)=>update('topic', e.target.value)} required>
+                <option value="">Please select</option>
+                {topics.map(t => <option key={t} value={t}>{t}</option>)}
+              </Select>
+            </FormField>
           </div>
-        </div>
 
-        <div className="md:col-span-2">
-          <label className="block text-sm text-gray-700 mb-2">Additional details</label>
-          <textarea className="input-field h-32" value={form.details} onChange={(e)=>update('details', e.target.value)} placeholder="Tell us about your needs" />
-        </div>
+          <div className="md:col-span-2">
+            <FormField label="Additional details" hint="Tell us about your needs">
+              <textarea className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent h-32" value={form.details} onChange={(e)=>update('details', e.target.value)} />
+            </FormField>
+          </div>
 
-        <div className="md:col-span-2 flex items-start space-x-3">
-          <input type="checkbox" id="agree" checked={form.agree} onChange={(e)=>update('agree', e.target.checked)} className="mt-1 w-5 h-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
-          <label htmlFor="agree" className="text-sm text-gray-700">I agree to TwinzTech’s privacy policy.</label>
-        </div>
+          <div className="md:col-span-2 flex items-start space-x-3">
+            <input type="checkbox" id="agree" checked={form.agree} onChange={(e)=>update('agree', e.target.checked)} className="mt-1 w-5 h-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
+            <label htmlFor="agree" className="text-sm text-gray-700">I agree to TwinzTech’s privacy policy.</label>
+          </div>
 
-        <div className="md:col-span-2">
-          <button type="submit" disabled={!isValid} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">Submit</button>
-        </div>
-      </form>
+          <div className="md:col-span-2">
+            <Button type="submit" disabled={!isValid} className="w-full">Submit</Button>
+          </div>
+        </form>
+      </Card>
     </div>
   );
 };
