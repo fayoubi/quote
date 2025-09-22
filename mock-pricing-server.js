@@ -8,6 +8,12 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
+// Logging middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // Health check endpoint
 app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok', service: 'mock-pricing-service' });
@@ -95,10 +101,20 @@ app.post('/api/v1/quotes/calculate', (req, res) => {
 
 // Get quote by ID endpoint
 app.get('/api/v1/quotes/:quoteId', (req, res) => {
+  console.log(`[${new Date().toISOString()}] Quote lookup requested for ID: ${req.params.quoteId}`);
   // For this mock, we'll just return a not found error since we don't store quotes
   res.status(404).json({
     error: 'QUOTE_NOT_FOUND',
     message: 'Quote not found'
+  });
+});
+
+// Catch-all handler for unknown routes
+app.use((req, res) => {
+  console.log(`[${new Date().toISOString()}] 404 - Unknown route: ${req.method} ${req.url}`);
+  res.status(404).json({
+    error: 'NOT_FOUND',
+    message: `Route ${req.method} ${req.url} not found`
   });
 });
 
