@@ -73,30 +73,50 @@ class RateLimiter {
   }
 }
 
-// Create rate limiter instance
-const rateLimiter = new RateLimiter(
+// Create rate limiter instances
+const defaultRateLimiter = new RateLimiter(
   parseInt(process.env.API_RATE_LIMIT || '100'),
   15 * 60 * 1000 // 15 minutes
 );
 
-export const rateLimitMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-  const result = rateLimiter.check(req);
+const quoteRateLimiter = new RateLimiter(
+  parseInt(process.env.QUOTE_RATE_LIMIT || '20'),
+  15 * 60 * 1000 // 15 minutes
+);
 
-  // Add rate limit headers
-  res.set({
-    'X-RateLimit-Limit': process.env.API_RATE_LIMIT || '100',
-    'X-RateLimit-Remaining': result.remaining?.toString() || '0',
-    'X-RateLimit-Reset': result.resetTime ? new Date(result.resetTime).toISOString() : ''
-  });
+const contributionRateLimiter = new RateLimiter(
+  parseInt(process.env.CONTRIBUTION_RATE_LIMIT || '50'),
+  15 * 60 * 1000 // 15 minutes
+);
 
-  if (!result.allowed) {
-    res.status(429).json({
-      error: 'Rate limit exceeded',
-      message: 'Too many requests. Please try again later.',
-      retryAfter: result.resetTime ? Math.ceil((result.resetTime - Date.now()) / 1000) : null
+const createRateLimitMiddleware = (limiter: RateLimiter, limitName: string) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const result = limiter.check(req);
+
+    // Add rate limit headers
+    res.set({
+      'X-RateLimit-Limit': limiter['maxRequests'].toString(),
+      'X-RateLimit-Remaining': result.remaining?.toString() || '0',
+      'X-RateLimit-Reset': result.resetTime ? new Date(result.resetTime).toISOString() : ''
     });
-    return;
-  }
 
-  next();
+    if (!result.allowed) {
+      res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: `Too many ${limitName} requests. Please try again later.`,
+        retryAfter: result.resetTime ? Math.ceil((result.resetTime - Date.now()) / 1000) : null
+      });
+      return;
+    }
+
+    next();
+  };
+};
+
+export const rateLimitMiddleware = createRateLimitMiddleware(defaultRateLimiter, 'API');
+
+export const rateLimit = {
+  default: createRateLimitMiddleware(defaultRateLimiter, 'API'),
+  quote: createRateLimitMiddleware(quoteRateLimiter, 'quote'),
+  contribution: createRateLimitMiddleware(contributionRateLimiter, 'contribution'),
 };
