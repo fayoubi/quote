@@ -5,6 +5,7 @@ import QuoteDisplay from './components/QuoteDisplay';
 import Header from './components/Header';
 import ContactPage from './components/ContactPage';
 import InsuranceForm from './components/InsuranceForm';
+import AboutPage from './components/AboutPage';
 import { QuoteProvider } from './context/QuoteContext';
 
 function App() {
@@ -13,14 +14,19 @@ function App() {
       <Router>
         <div className="min-h-screen bg-gray-50">
           <Header />
-          <main className="container mx-auto px-4 py-8">
-            <Routes>
-              <Route path="/" element={<QuoteForm />} />
-              <Route path="/quote" element={<QuoteDisplay />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/enroll/start" element={<InsuranceForm />} />
-            </Routes>
-          </main>
+          <Routes>
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="*" element={
+              <main className="container mx-auto px-4 py-8">
+                <Routes>
+                  <Route path="/" element={<QuoteForm />} />
+                  <Route path="/quote" element={<QuoteDisplay />} />
+                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/enroll/start" element={<InsuranceForm />} />
+                </Routes>
+              </main>
+            } />
+          </Routes>
         </div>
       </Router>
     </QuoteProvider>
