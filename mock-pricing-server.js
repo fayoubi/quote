@@ -109,6 +109,98 @@ app.get('/api/v1/quotes/:quoteId', (req, res) => {
   });
 });
 
+// Contribution validation endpoint
+app.post('/api/v1/contributions/validate', (req, res) => {
+  try {
+    const { amount, frequency } = req.body;
+
+    console.log(`[${new Date().toISOString()}] Contribution validation requested: ${amount} MAD ${frequency}`);
+
+    // Validate input
+    if (!amount || !frequency) {
+      return res.status(400).json({
+        error: 'INVALID_REQUEST',
+        message: 'Missing required fields: amount and frequency'
+      });
+    }
+
+    if (!['monthly', 'quarterly', 'bi-annual', 'annual'].includes(frequency)) {
+      return res.status(400).json({
+        error: 'INVALID_FREQUENCY',
+        message: 'Frequency must be one of: monthly, quarterly, bi-annual, annual'
+      });
+    }
+
+    // Minimum contribution amounts
+    const minimums = {
+      monthly: 250,
+      quarterly: 750,
+      'bi-annual': 1500,
+      annual: 3000
+    };
+
+    const minimum = minimums[frequency];
+
+    if (amount < minimum) {
+      const frequencyLabel = {
+        monthly: 'mensuelle',
+        quarterly: 'trimestrielle',
+        'bi-annual': 'semestrielle',
+        annual: 'annuelle'
+      }[frequency];
+
+      return res.json({
+        validation: {
+          isValid: false,
+          errorMessage: `Le montant minimum pour la fréquence ${frequencyLabel} est de ${minimum.toLocaleString('fr-MA')} MAD.`,
+          monthlyEquivalent: 0,
+          annualTotal: 0
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Calculate equivalents
+    let monthlyEquivalent, annualTotal;
+    switch (frequency) {
+      case 'monthly':
+        monthlyEquivalent = amount;
+        annualTotal = amount * 12;
+        break;
+      case 'quarterly':
+        monthlyEquivalent = Math.round(amount / 3);
+        annualTotal = amount * 4;
+        break;
+      case 'bi-annual':
+        monthlyEquivalent = Math.round(amount / 6);
+        annualTotal = amount * 2;
+        break;
+      case 'annual':
+        monthlyEquivalent = Math.round(amount / 12);
+        annualTotal = amount;
+        break;
+    }
+
+    console.log(`[${new Date().toISOString()}] Contribution validated: ${amount} MAD ${frequency} -> Monthly: ${monthlyEquivalent} MAD, Annual: ${annualTotal} MAD`);
+
+    res.json({
+      validation: {
+        isValid: true,
+        monthlyEquivalent,
+        annualTotal
+      },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error validating contribution:', error);
+    res.status(500).json({
+      error: 'VALIDATION_ERROR',
+      message: 'Failed to validate contribution'
+    });
+  }
+});
+
 // Catch-all handler for unknown routes
 app.use((req, res) => {
   console.log(`[${new Date().toISOString()}] 404 - Unknown route: ${req.method} ${req.url}`);
