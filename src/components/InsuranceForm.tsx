@@ -641,6 +641,7 @@ const InsuranceForm: React.FC = () => {
             </button>
             <button
               type="button"
+              onClick={() => window.location.href = '/enroll/contribution'}
               className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               Suivant

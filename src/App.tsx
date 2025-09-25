@@ -5,6 +5,7 @@ import QuoteDisplay from './components/QuoteDisplay';
 import Header from './components/Header';
 import ContactPage from './components/ContactPage';
 import InsuranceForm from './components/InsuranceForm';
+import ContributionForm from './components/ContributionForm';
 import AboutPage from './components/AboutPage';
 import { QuoteProvider } from './context/QuoteContext';
 
@@ -23,6 +24,7 @@ function App() {
                   <Route path="/quote" element={<QuoteDisplay />} />
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="/enroll/start" element={<InsuranceForm />} />
+                  <Route path="/enroll/contribution" element={<ContributionForm />} />
                 </Routes>
               </main>
             } />
