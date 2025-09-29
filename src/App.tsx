@@ -6,6 +6,7 @@ import Header from './components/Header';
 import ContactPage from './components/ContactPage';
 import InsuranceForm from './components/InsuranceForm';
 import EnhancedContributionForm from './components/EnhancedContributionForm';
+import BeneficiariesPage from './components/BeneficiariesPage';
 import AboutPage from './components/AboutPage';
 import { QuoteProvider } from './context/QuoteContext';
 
@@ -25,6 +26,7 @@ function App() {
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="/enroll/start" element={<InsuranceForm />} />
                   <Route path="/enroll/contribution" element={<EnhancedContributionForm />} />
+                  <Route path="/enroll/beneficiaries" element={<BeneficiariesPage />} />
                 </Routes>
               </main>
             } />
