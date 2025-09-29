@@ -305,7 +305,9 @@ const EnhancedContributionForm: React.FC = () => {
         paymentConfig
       };
       console.log('Final submission:', finalData);
-      alert('Configuration des paiements terminée! (Navigation vers étape suivante à implémenter)');
+
+      // Navigate to beneficiaries page with enrollment ID
+      navigate('/enroll/beneficiaries?enrollmentId=demo-enrollment-123');
     }
   };
 
