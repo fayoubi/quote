@@ -5,7 +5,7 @@ dotenv.config();
 
 export const config = {
   // Server configuration
-  port: parseInt(process.env.PORT || '3000'),
+  port: parseInt(process.env.PORT || '3001'),
   nodeEnv: process.env.NODE_ENV || 'development',
 
   // Database configuration

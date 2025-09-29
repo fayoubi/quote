@@ -2,7 +2,7 @@
 // Using Node.js 18+ built-in fetch
 
 const testQuoteAPI = async () => {
-  console.log('🧪 Testing Quote API Integration...\n');
+  console.log('🧪 Testing Quote API Integration (port 3001)...\n');
 
   // Test 1: Health check
   console.log('1. Testing health endpoint...');

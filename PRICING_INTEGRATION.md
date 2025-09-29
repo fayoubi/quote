@@ -83,12 +83,12 @@ User adjusts slider/toggle → API call → Loading overlay → Updated pricing
 ### Environment Variables
 ```bash
 # .env.local
-REACT_APP_PRICING_SERVICE_URL=http://localhost:3000
+REACT_APP_PRICING_SERVICE_URL=http://localhost:3001
 REACT_APP_ENV=development
 ```
 
 ### Pricing Service Requirements
-The frontend expects the pricing service to be running on port 3000 with the following endpoints:
+The frontend expects the pricing service to be running on port 3001 with the following endpoints:
 - `POST /api/v1/quotes/calculate` - Calculate new quotes
 - `GET /api/v1/health` - Health check for service availability
 
