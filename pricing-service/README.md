@@ -56,9 +56,9 @@ pricing-service/
    ```
 
 3. **Access the service**
-   - API: http://localhost:3000
-   - Documentation: http://localhost:3000/api/docs
-   - Health Check: http://localhost:3000/api/v1/health
+   - API: http://localhost:3001
+   - Documentation: http://localhost:3001/api/docs
+   - Health Check: http://localhost:3001/api/v1/health
 
 ### Manual Setup
 
@@ -96,7 +96,7 @@ pricing-service/
 ### Calculate Quote
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/quotes/calculate \\
+curl -X POST http://localhost:3001/api/v1/quotes/calculate \\
   -H "Content-Type: application/json" \\
   -d '{
     "productType": "term_life",
@@ -118,13 +118,13 @@ curl -X POST http://localhost:3000/api/v1/quotes/calculate \\
 ### List Available Products
 
 ```bash
-curl http://localhost:3000/api/v1/products
+curl http://localhost:3001/api/v1/products
 ```
 
 ### Health Check
 
 ```bash
-curl http://localhost:3000/api/v1/health
+curl http://localhost:3001/api/v1/health
 ```
 
 ## 🔧 Configuration
@@ -133,7 +133,7 @@ curl http://localhost:3000/api/v1/health
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `PORT` | Server port | 3000 |
+| `PORT` | Server port | 3001 |
 | `NODE_ENV` | Environment (development/production/test) | development |
 | `DATABASE_URL` | PostgreSQL connection string | - |
 | `REDIS_URL` | Redis connection string | - |
@@ -247,13 +247,13 @@ npm run build        # Production build
 ### Docker Deployment
 ```bash
 docker build -t pricing-service .
-docker run -p 3000:3000 pricing-service
+docker run -p 3001:3001 pricing-service
 ```
 
 ## 📚 API Documentation
 
 Complete interactive API documentation available at:
-- **Development**: http://localhost:3000/api/docs
+- **Development**: http://localhost:3001/api/docs
 - **Production**: https://api.company.com/api/docs
 
 ## 🤝 Contributing

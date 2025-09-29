@@ -3,49 +3,23 @@
 
 A modern React application for life insurance quotes and enrollment with contribution management.
 
-## ✅ Start all services (Frontend + Pricing API)
+## ✅ Start all services (Frontend + Pricing API on port 3001)
 
-There are two supported ways to run the app end-to-end. Choose ONE:
+The app now uses the real `pricing-service` only. Everything is pinned to port 3001.
 
-### Option A — Fastest (Mock API)
-Use the built-in mock API on port 3001.
-
-1. Create `.env.local` in the project root (if not already present):
-   ```bash
-   echo "REACT_APP_PRICING_SERVICE_URL=http://localhost:3001" > .env.local
-   echo "REACT_APP_ENV=development" >> .env.local
-   ```
-2. Start the mock API (Terminal 1):
-   ```bash
-   npm run mock-server
-   ```
-3. Start the React app (Terminal 2):
-   ```bash
-   npm start
-   ```
-4. Verify the API is up (optional):
-   ```bash
-   curl http://localhost:3001/api/v1/health
-   # {"status":"ok","service":"mock-pricing-service"}
-   ```
-
-### Option B — Real pricing-service (Docker Compose)
-Run the full `pricing-service` (Node + Postgres + Redis) on port 3000.
-
-1. Start backend stack:
+1. Start the backend stack:
    ```bash
    cd pricing-service
    docker-compose up -d
    ```
 2. Wait for health to be ready:
    ```bash
-   curl http://localhost:3000/api/v1/health
-   # Expect a JSON health response
+   curl http://localhost:3001/api/v1/health
    ```
-3. In the project root, point the frontend to port 3000:
+3. Point the frontend to port 3001:
    ```bash
    cd ..
-   echo "REACT_APP_PRICING_SERVICE_URL=http://localhost:3000" > .env.local
+   echo "REACT_APP_PRICING_SERVICE_URL=http://localhost:3001" > .env.local
    echo "REACT_APP_ENV=development" >> .env.local
    ```
 4. Start the React app:
@@ -54,10 +28,8 @@ Run the full `pricing-service` (Node + Postgres + Redis) on port 3000.
    ```
 
 Notes:
-- If you previously ran Option A, ensure only one backend is running and the URL matches your choice.
 - Frontend: http://localhost:3000
-- Mock API: http://localhost:3001
-- Real pricing-service: http://localhost:3000
+- Pricing service: http://localhost:3001
 
 ## 🚀 Quick Start
 
@@ -65,28 +37,16 @@ Notes:
 
 To run the complete application locally, you need both the frontend and backend services:
 
-#### Option 1: Run services separately (Recommended)
+#### Local Development
 
-1. **Start the Mock Pricing Server** (Terminal 1):
+1. **Start the pricing service** (Docker Compose):
    ```bash
-   npm run mock-server
-   ```
-   This starts the backend API server on http://localhost:3001
-
-2. **Start the React App** (Terminal 2):
-   ```bash
-   npm start
-   ```
-   This starts the frontend on http://localhost:3000
-
-#### Option 2: Run both services manually
-
-1. **Backend**:
-   ```bash
-   node mock-pricing-server.js
+   cd pricing-service
+   docker-compose up -d
+   cd ..
    ```
 
-2. **Frontend**:
+2. **Start the React App**:
    ```bash
    npm start
    ```
@@ -144,7 +104,6 @@ This validates:
 - `npm start` - Start React development server
 - `npm run build` - Build for production
 - `npm run test` - Run React tests
-- `npm run mock-server` - Start mock pricing server
 - `npm run test-api` - Test API endpoints
 
 ## 🛠️ Configuration
@@ -159,7 +118,7 @@ REACT_APP_ENV=development
 
 ### API Endpoints
 
-The mock server provides:
+The pricing service provides:
 - `GET /api/v1/health` - Health check
 - `POST /api/v1/quotes/calculate` - Quote calculation
 - `POST /api/v1/contributions/validate` - Contribution validation
@@ -170,23 +129,17 @@ The mock server provides:
 
 If you encounter a "Failed to fetch" error:
 
-1. **Check if the mock server is running**:
+1. **Check if the pricing service is running**:
    ```bash
    curl http://localhost:3001/api/v1/health
    ```
-   Should return: `{"status":"ok","service":"mock-pricing-service"}`
 
-2. **Restart the mock server**:
-   ```bash
-   npm run mock-server
-   ```
-
-3. **Test the API**:
+2. **Test the API**:
    ```bash
    npm run test-api
    ```
 
-4. **Check the console** for any CORS or network errors
+3. **Check the console** for any CORS or network errors
 
 ### Port Conflicts
 
@@ -219,7 +172,7 @@ For production deployment:
 │   ├── services/           # API integration
 │   ├── types/             # TypeScript type definitions
 │   └── context/           # React context providers
-├── mock-pricing-server.js  # Development backend
+├── pricing-service/        # Real pricing backend (Docker Compose)
 ├── test-quote-api.js      # API test suite
 └── README.md
 ```
