@@ -59,11 +59,12 @@ export class ContributionController {
         timestamp: new Date().toISOString()
       });
 
-    } catch (error) {
-      logger.error('Error validating contribution:', error);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.error('Error validating contribution', { message });
       res.status(500).json({
         error: 'Internal server error during contribution validation',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message
       });
     }
   }

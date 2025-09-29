@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { PricingEngineFactory } from '../services/PricingEngine.js';
 import { UniversalQuoteRequest, ProductType } from '../models/types.js';
 import { QuoteService } from '../services/QuoteService.js';
-import { validateQuoteRequest } from '../middleware/validation.js';
+// import { validateQuoteRequest } from '../middleware/validation.js';
 
 export class QuoteController {
   private quoteService: QuoteService;

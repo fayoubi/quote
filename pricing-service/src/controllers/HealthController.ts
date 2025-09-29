@@ -11,7 +11,7 @@ export class HealthController {
     this.redisService = new RedisService();
   }
 
-  async basicHealthCheck(req: Request, res: Response): Promise<void> {
+  async basicHealthCheck(_req: Request, res: Response): Promise<void> {
     try {
       const health = {
         status: 'healthy',
@@ -31,7 +31,7 @@ export class HealthController {
     }
   }
 
-  async deepHealthCheck(req: Request, res: Response): Promise<void> {
+  async deepHealthCheck(_req: Request, res: Response): Promise<void> {
     try {
       const checks = await Promise.allSettled([
         this.checkDatabase(),

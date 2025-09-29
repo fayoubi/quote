@@ -1,6 +1,6 @@
 import { DatabaseService } from './DatabaseService.js';
 import { RedisService } from './RedisService.js';
-import { Quote } from '../models/types.js';
+import { Quote, Gender } from '../models/types.js';
 
 export class QuoteService {
   private dbService: DatabaseService;
@@ -17,14 +17,14 @@ export class QuoteService {
       await this.dbService.saveQuote({
         quote_id: quote.quoteId,
         product_type: quote.productType,
-        applicant_data: quote.riskAssessment ? {
+        applicant_data: {
           // We need to reconstruct applicant data from the quote
-          gender: 'Unknown', // This would come from the original request
+          gender: Gender.MALE, // Default placeholder; source comes from request
           birthDate: new Date(Date.now() - (quote.riskAssessment.age * 365.25 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
           height: 0, // This would come from the original request
           weight: 0, // This would come from the original request
           city: '', // This would come from the original request
-          usesNicotine: quote.riskAssessment.riskFactors?.includes('Nicotine use') || false
+          usesNicotine: !!quote.riskAssessment?.riskFactors?.includes('Nicotine use')
         },
         pricing_result: quote.pricing,
         eligibility_flags: quote.eligibilityFlags,

@@ -128,13 +128,24 @@ export class RedisService {
     }
   }
 
-  async getStats(): Promise<{ [key: string]: string }> {
+  async getStats(): Promise<Record<string, string>> {
     if (!this.isConnected) {
       return {};
     }
 
     try {
-      return await this.client.info();
+      const info = await this.client.info();
+      // redis@v4 returns string; normalize into key/value map of strings
+      return info.split('\n').reduce((acc: Record<string, string>, line: string) => {
+        if (!line || line.startsWith('#')) return acc;
+        const idx = line.indexOf(':');
+        if (idx > -1) {
+          const key = line.slice(0, idx);
+          const value = line.slice(idx + 1).trim();
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
     } catch (error) {
       console.error('Error getting Redis stats:', error);
       return {};

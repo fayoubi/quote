@@ -67,7 +67,7 @@ if (featureFlagService.isEnabled('metrics_collection')) {
   app.use(metricsService.requestDurationMiddleware());
 
   // Metrics endpoint
-  app.get('/api/v1/metrics', async (req, res) => {
+  app.get('/api/v1/metrics', async (_req, res) => {
     try {
       const metrics = await metricsService!.getMetrics();
       res.set('Content-Type', 'text/plain');
@@ -82,7 +82,7 @@ if (featureFlagService.isEnabled('metrics_collection')) {
 app.use('/', routes);
 
 // Root endpoint
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.json({
     service: 'Pricing Service',
     version: '1.0.0',

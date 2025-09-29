@@ -9,7 +9,7 @@ export class ProductController {
     this.productService = new ProductService();
   }
 
-  async getAvailableProducts(req: Request, res: Response): Promise<void> {
+  async getAvailableProducts(_req: Request, res: Response): Promise<void> {
     try {
       const products = await this.productService.getAvailableProducts();
       res.status(200).json({ products });

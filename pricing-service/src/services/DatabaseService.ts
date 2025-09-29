@@ -1,4 +1,4 @@
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 import { Product, Quote, RateTable } from '../models/types.js';
 
 export class DatabaseService {
