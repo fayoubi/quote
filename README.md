@@ -3,6 +3,62 @@
 
 A modern React application for life insurance quotes and enrollment with contribution management.
 
+## ✅ Start all services (Frontend + Pricing API)
+
+There are two supported ways to run the app end-to-end. Choose ONE:
+
+### Option A — Fastest (Mock API)
+Use the built-in mock API on port 3001.
+
+1. Create `.env.local` in the project root (if not already present):
+   ```bash
+   echo "REACT_APP_PRICING_SERVICE_URL=http://localhost:3001" > .env.local
+   echo "REACT_APP_ENV=development" >> .env.local
+   ```
+2. Start the mock API (Terminal 1):
+   ```bash
+   npm run mock-server
+   ```
+3. Start the React app (Terminal 2):
+   ```bash
+   npm start
+   ```
+4. Verify the API is up (optional):
+   ```bash
+   curl http://localhost:3001/api/v1/health
+   # {"status":"ok","service":"mock-pricing-service"}
+   ```
+
+### Option B — Real pricing-service (Docker Compose)
+Run the full `pricing-service` (Node + Postgres + Redis) on port 3000.
+
+1. Start backend stack:
+   ```bash
+   cd pricing-service
+   docker-compose up -d
+   ```
+2. Wait for health to be ready:
+   ```bash
+   curl http://localhost:3000/api/v1/health
+   # Expect a JSON health response
+   ```
+3. In the project root, point the frontend to port 3000:
+   ```bash
+   cd ..
+   echo "REACT_APP_PRICING_SERVICE_URL=http://localhost:3000" > .env.local
+   echo "REACT_APP_ENV=development" >> .env.local
+   ```
+4. Start the React app:
+   ```bash
+   npm start
+   ```
+
+Notes:
+- If you previously ran Option A, ensure only one backend is running and the URL matches your choice.
+- Frontend: http://localhost:3000
+- Mock API: http://localhost:3001
+- Real pricing-service: http://localhost:3000
+
 ## 🚀 Quick Start
 
 ### Development Setup
