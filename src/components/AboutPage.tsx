@@ -215,7 +215,7 @@ const AboutPage: React.FC = () => {
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900">YadmanX Team</p>
-                  <p className="text-gray-600">Under TwinzTech Management</p>
+                  <p className="text-gray-600">Insurance Technology Leaders</p>
                 </div>
               </div>
             </div>
@@ -223,16 +223,16 @@ const AboutPage: React.FC = () => {
         </div>
       </div>
 
-      {/* About TwinzTech */}
+      {/* About YadmanX Leadership */}
       <div className="py-16 bg-primary-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Backed by TwinzTech
+              About YadmanX
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              YadmanX operates under TwinzTech management, bringing together industry
-              expertise and cutting-edge technology to deliver innovative insurtech solutions.
+              YadmanX brings together industry expertise and cutting-edge technology
+              to deliver innovative insurtech solutions that transform how insurance is sold and managed.
             </p>
           </div>
 

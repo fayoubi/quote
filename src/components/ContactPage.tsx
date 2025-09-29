@@ -57,7 +57,7 @@ const ContactPage: React.FC = () => {
     e.preventDefault();
     if (!isValid) return;
 
-    const to = 'contact@twinztech.com';
+    const to = 'contact@yadmanx.com';
     const subject = encodeURIComponent(`Contact enquiry (${form.topic}) - ${form.firstName} ${form.lastName}`);
     const lines = [
       `Name: ${form.firstName} ${form.lastName}`,
@@ -76,7 +76,7 @@ const ContactPage: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-3xl font-semibold text-gray-900 mb-6">Contact TwinzTech</h1>
+      <h1 className="text-3xl font-semibold text-gray-900 mb-6">Contact YadmanX</h1>
       <p className="text-gray-600 mb-8">We are based in Europe. Please include your country code in the phone number (e.g. +33, +49, +34). Fields marked with * are required.</p>
 
       <Card className="p-6">
@@ -119,7 +119,7 @@ const ContactPage: React.FC = () => {
 
           <div className="md:col-span-2 flex items-start space-x-3">
             <input type="checkbox" id="agree" checked={form.agree} onChange={(e)=>update('agree', e.target.checked)} className="mt-1 w-5 h-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
-            <label htmlFor="agree" className="text-sm text-gray-700">I agree to TwinzTech’s privacy policy.</label>
+            <label htmlFor="agree" className="text-sm text-gray-700">I agree to YadmanX's privacy policy.</label>
           </div>
 
           <div className="md:col-span-2">

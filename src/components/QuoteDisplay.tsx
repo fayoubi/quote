@@ -122,7 +122,7 @@ const QuoteDisplay: React.FC = () => {
               <Loader2 className="w-8 h-8 mr-3 animate-spin text-primary-600" />
               <span className="text-2xl">Updating...</span>
             </div>
-          ) : currentQuote ? (
+          ) : currentQuote && currentQuote.pricing.monthlyPremium != null && !isNaN(currentQuote.pricing.monthlyPremium) ? (
             `$${currentQuote.pricing.monthlyPremium.toFixed(2)}`
           ) : (
             '$--'
@@ -132,7 +132,7 @@ const QuoteDisplay: React.FC = () => {
           <span>Estimated Monthly Price</span>
           <Info className="w-4 h-4 ml-2 text-gray-400" />
         </div>
-        {currentQuote && !isUpdatingQuote && (
+        {currentQuote && !isUpdatingQuote && currentQuote.pricing.annualPremium != null && !isNaN(currentQuote.pricing.annualPremium) && (
           <div className="text-sm text-gray-500 mt-2">
             ${currentQuote.pricing.annualPremium.toFixed(2)} per year
           </div>

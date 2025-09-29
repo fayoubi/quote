@@ -1,7 +1,7 @@
-# TwinzTech Insurance Application - Requirements & Configuration
+# YadmanX Insurance Application - Requirements & Configuration
 
 ## 🌍 **Regional Context**
-- **Company:** TwinzTech
+- **Company:** YadmanX
 - **Location:** Morocco/Europe
 - **Date Format:** European (DD/MM/YYYY)
 - **Units:** Metric System

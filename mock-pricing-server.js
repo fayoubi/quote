@@ -32,9 +32,42 @@ app.post('/api/v1/quotes/calculate', (req, res) => {
       });
     }
 
+    // Validate and parse birth date
+    if (!applicant.birthDate) {
+      return res.status(400).json({
+        error: 'INVALID_REQUEST',
+        message: 'Missing birthDate'
+      });
+    }
+
+    const birthDate = new Date(applicant.birthDate);
+    if (isNaN(birthDate.getTime())) {
+      return res.status(400).json({
+        error: 'INVALID_REQUEST',
+        message: 'Invalid birthDate format'
+      });
+    }
+
+    // Calculate age
+    const age = new Date().getFullYear() - birthDate.getFullYear();
+    if (age < 18 || age > 100) {
+      return res.status(400).json({
+        error: 'INVALID_REQUEST',
+        message: 'Age must be between 18 and 100'
+      });
+    }
+
+    // Validate other required fields
+    if (!applicant.height || !applicant.weight || applicant.height <= 0 || applicant.weight <= 0) {
+      return res.status(400).json({
+        error: 'INVALID_REQUEST',
+        message: 'Valid height and weight are required'
+      });
+    }
+
     // Mock quote calculation based on simple factors
     const baseRate = 50; // Base monthly rate
-    const ageMultiplier = Math.max(1, (new Date().getFullYear() - new Date(applicant.birthDate).getFullYear()) / 30);
+    const ageMultiplier = Math.max(1, age / 30);
     const nicotineMultiplier = applicant.usesNicotine ? 1.5 : 1.0;
     const genderMultiplier = applicant.gender === 'Male' ? 1.1 : 1.0;
     const termMultiplier = policy.termLength === 20 ? 1.2 : 1.0;
@@ -44,7 +77,6 @@ app.post('/api/v1/quotes/calculate', (req, res) => {
     const annualPremium = monthlyPremium * 12;
 
     // Mock risk assessment
-    const age = new Date().getFullYear() - new Date(applicant.birthDate).getFullYear();
     const bmi = applicant.weight / ((applicant.height / 100) ** 2);
 
     let riskClass = 'Standard';
