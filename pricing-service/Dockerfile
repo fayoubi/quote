@@ -40,6 +40,9 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy built application
 COPY --from=base /app/dist ./dist
 
+# Copy static documentation files
+COPY --from=base /app/src/docs/*.html ./dist/docs/
+
 ## No separate config directory to copy in this project
 
 # Create necessary directories

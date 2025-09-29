@@ -5,12 +5,18 @@ import compression from 'compression';
 import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 import config from './config/index.js';
 import routes from './routes/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { featureFlagService } from './services/FeatureFlagService.js';
 import { MetricsService } from './services/MetricsService.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -56,7 +62,28 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Custom yadmanx documentation page
+app.get('/api/docs/', (_req, res) => {
+  try {
+    const docsPath = path.join(__dirname, 'docs', 'apiDocs.html');
+    const docsContent = fs.readFileSync(docsPath, 'utf8');
+    res.set('Content-Type', 'text/html');
+    res.send(docsContent);
+  } catch (error) {
+    console.error('Error serving documentation:', error);
+    res.status(404).send('Documentation not found');
+  }
+});
+
+// Interactive Swagger UI at /api/docs/interactive
+app.use('/api/docs/interactive', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: `
+    .swagger-ui .topbar { display: none; }
+    .swagger-ui .info .title { color: #1a365d; }
+  `,
+  customSiteTitle: 'yadmanx Pricing Service - Interactive API'
+}));
 
 // Initialize metrics if enabled
 let metricsService: MetricsService | undefined;
@@ -84,12 +111,15 @@ app.use('/', routes);
 // Root endpoint
 app.get('/', (_req, res) => {
   res.json({
-    service: 'Pricing Service',
+    service: 'yadmanx Pricing Service',
     version: '1.0.0',
     environment: config.nodeEnv,
     timestamp: new Date().toISOString(),
     features: featureFlagService.getEnabledProducts(),
-    documentation: '/api/docs'
+    documentation: {
+      comprehensive: '/api/docs/',
+      interactive: '/api/docs/interactive'
+    }
   });
 });
 
