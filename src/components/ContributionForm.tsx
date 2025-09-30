@@ -24,10 +24,12 @@ const ContributionForm: React.FC = () => {
   const [validation, setValidation] = useState<ContributionValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [hasValidated, setHasValidated] = useState(false);
 
   const validateContribution = useCallback(async () => {
-    if (formData.amount <= 0) return;
+    if (formData.amount <= 0) {
+      setValidation(null);
+      return;
+    }
 
     setIsValidating(true);
     try {
@@ -50,29 +52,23 @@ const ContributionForm: React.FC = () => {
   }, [formData.amount, formData.frequency]);
 
   useEffect(() => {
-    if (formData.amount > 0 && hasValidated) {
+    const timeoutId = setTimeout(() => {
       validateContribution();
-    }
-  }, [formData.amount, formData.frequency, hasValidated, validateContribution]);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.amount, formData.frequency, validateContribution]);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value) || 0;
     setFormData(prev => ({ ...prev, amount: value }));
     setShowConfirmation(false);
-    if (!hasValidated && value > 0) {
-      setHasValidated(true);
-    }
   };
 
   const handleFrequencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const frequency = e.target.value as ContributionFrequency;
     setFormData(prev => ({ ...prev, frequency }));
     setShowConfirmation(false);
-  };
-
-  const handleValidateClick = () => {
-    setHasValidated(true);
-    validateContribution();
   };
 
   const handleConfirm = () => {
@@ -150,25 +146,12 @@ const ContributionForm: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-center">
-              <Button
-                onClick={handleValidateClick}
-                disabled={isValidating || formData.amount <= 0}
-                className="flex items-center gap-2"
-              >
-                {isValidating ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Validation...
-                  </>
-                ) : (
-                  <>
-                    <Calculator className="h-4 w-4" />
-                    Valider la Contribution
-                  </>
-                )}
-              </Button>
-            </div>
+            {isValidating && formData.amount > 0 && (
+              <div className="mt-6 flex justify-center items-center gap-2 text-gray-600">
+                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm">Validation en cours...</span>
+              </div>
+            )}
           </Card>
 
           {/* Validation Result */}
