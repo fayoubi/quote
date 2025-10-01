@@ -41,13 +41,19 @@ class AuthController {
       throw new ApiError(404, 'Agent not registered');
     }
 
+    // Check if agent is active
+    if (agent.status !== 'active') {
+      throw new ApiError(403, 'Agent account is not active');
+    }
+
     // Create OTP
     const otpResult = await otpService.createOTP(phone_number, delivery_method);
 
     res.json({
       success: true,
-      message: otpResult.message,
+      message: `OTP sent via ${delivery_method}`,
       expiresAt: otpResult.expiresAt,
+      deliveryMethod: otpResult.deliveryMethod,
       ...(process.env.NODE_ENV === 'development' && { code: otpResult.code }),
     });
   });
@@ -70,17 +76,31 @@ class AuthController {
       throw new ApiError(404, 'Agent not found');
     }
 
+    // Check if agent is active
+    if (agent.status !== 'active') {
+      throw new ApiError(403, 'Agent account is not active');
+    }
+
     // Generate token
-    const tokenData = tokenService.generateToken(agent.id);
+    const token = tokenService.generateToken(agent);
 
     // Create session
-    await tokenService.createSession(agent.id, tokenData.token);
+    await tokenService.createSession(agent.id, token);
 
     res.json({
       success: true,
-      token: tokenData.token,
-      expiresIn: tokenData.expiresIn,
-      agent,
+      token: token,
+      expiresIn: '24h',
+      agent: {
+        id: agent.id,
+        phone_number: agent.phone_number,
+        country_code: agent.country_code,
+        first_name: agent.first_name,
+        last_name: agent.last_name,
+        email: agent.email,
+        license_number: agent.license_number,
+        status: agent.status,
+      },
     });
   });
 
@@ -120,6 +140,50 @@ class AuthController {
     res.json({
       success: true,
       message: 'Logged out successfully',
+    });
+  });
+
+  // POST /api/v1/auth/validate - Validate JWT token (for other services)
+  validate = asyncHandler(async (req, res) => {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.json({
+        valid: false,
+        error: 'Token is required',
+      });
+    }
+
+    // Verify token
+    const verification = tokenService.verifyToken(token);
+
+    if (!verification.valid) {
+      return res.json({
+        valid: false,
+        error: 'Invalid or expired token',
+      });
+    }
+
+    // Validate session
+    const sessionValidation = await tokenService.validateSession(token);
+
+    if (!sessionValidation.valid) {
+      return res.json({
+        valid: false,
+        error: 'Session not found or expired',
+      });
+    }
+
+    res.json({
+      valid: true,
+      agent: {
+        id: sessionValidation.session.agent_id,
+        phoneNumber: sessionValidation.session.phone_number,
+        email: sessionValidation.session.email,
+        firstName: sessionValidation.session.first_name,
+        lastName: sessionValidation.session.last_name,
+        status: sessionValidation.session.status,
+      },
     });
   });
 }

@@ -1,6 +1,5 @@
 import express from 'express';
 import authController from '../controllers/auth.controller.js';
-import { validateTokenForServices } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
@@ -12,6 +11,6 @@ router.post('/refresh', authController.refreshToken);
 router.post('/logout', authController.logout);
 
 // Token validation endpoint for other services
-router.post('/validate', validateTokenForServices);
+router.post('/validate', authController.validate);
 
 export default router;
