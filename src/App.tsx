@@ -7,6 +7,9 @@ import ContactPage from './components/ContactPage';
 import InsuranceForm from './components/InsuranceForm';
 import EnhancedContributionForm from './components/EnhancedContributionForm';
 import BeneficiariesPage from './components/BeneficiariesPage';
+import EnrollmentConfirmation from './components/EnrollmentConfirmation';
+import EnrollmentSuccess from './components/EnrollmentSuccess';
+import EnrollmentError from './components/EnrollmentError';
 import AboutPage from './components/AboutPage';
 import { QuoteProvider } from './context/QuoteContext';
 
@@ -27,6 +30,9 @@ function App() {
                   <Route path="/enroll/start" element={<InsuranceForm />} />
                   <Route path="/enroll/contribution" element={<EnhancedContributionForm />} />
                   <Route path="/enroll/beneficiaries" element={<BeneficiariesPage />} />
+                  <Route path="/enroll/confirmation" element={<EnrollmentConfirmation />} />
+                  <Route path="/enroll/success" element={<EnrollmentSuccess />} />
+                  <Route path="/enroll/error" element={<EnrollmentError />} />
                 </Routes>
               </main>
             } />

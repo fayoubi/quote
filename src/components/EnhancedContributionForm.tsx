@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Calculator,
   CheckCircle,
@@ -40,6 +40,8 @@ import Select from './ui/Select';
 
 const EnhancedContributionForm: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const enrollmentId = searchParams.get('enrollmentId');
 
   // Section 1: Contribution Details (existing functionality)
   const [formData, setFormData] = useState<EnhancedContributionFormData>({
@@ -298,16 +300,71 @@ const EnhancedContributionForm: React.FC = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleFinalSubmit = () => {
-    if (validateSection2()) {
-      const finalData = {
-        ...formData,
-        paymentConfig
-      };
-      console.log('Final submission:', finalData);
+  const handleFinalSubmit = async () => {
+    if (!enrollmentId) {
+      alert('Enrollment ID is missing. Please start from the beginning.');
+      navigate('/enroll/start');
+      return;
+    }
 
-      // Navigate to beneficiaries page with enrollment ID
-      navigate('/enroll/beneficiaries?enrollmentId=demo-enrollment-123');
+    if (validateSection2()) {
+      try {
+        // Save billing data to enrollment service
+        const billingData = {
+          contribution_amount: formData.amount.toString(),
+          contribution_frequency: formData.frequency,
+          payment_method_type: paymentConfig.paymentMode.mode,
+          payment_method_last_four: paymentConfig.paymentMode.mode === 'bank_draft' && paymentConfig.paymentMode.accountNumber
+            ? paymentConfig.paymentMode.accountNumber.slice(-4)
+            : paymentConfig.paymentMode.mode === 'check' && paymentConfig.paymentMode.checkNumber
+            ? paymentConfig.paymentMode.checkNumber.slice(-4)
+            : null,
+          payment_method_data: JSON.stringify({
+            initial_payment_amount: paymentConfig.initialPayment.amount,
+            fund_origins: paymentConfig.fundOrigins.selected,
+            fund_origin_other: paymentConfig.fundOrigins.otherDescription || null,
+            bank_name: paymentConfig.paymentMode.bankName,
+            agency_name: paymentConfig.paymentMode.agencyName,
+            check_number: paymentConfig.paymentMode.mode === 'check' ? paymentConfig.paymentMode.checkNumber : null,
+            account_number: paymentConfig.paymentMode.mode === 'bank_draft' ? paymentConfig.paymentMode.accountNumber : null,
+          }),
+          effective_date: new Date().toISOString().split('T')[0],
+        };
+
+        const response = await fetch(`http://localhost:3002/api/v1/enrollments/${enrollmentId}/billing`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-agent-id': '11111111-1111-1111-1111-111111111111'
+          },
+          body: JSON.stringify(billingData)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Failed to save billing data');
+        }
+
+        // Save step data
+        await fetch(`http://localhost:3002/api/v1/enrollments/${enrollmentId}/steps/billing`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-agent-id': '11111111-1111-1111-1111-111111111111'
+          },
+          body: JSON.stringify({
+            contribution: formData,
+            paymentConfig
+          })
+        });
+
+        // Navigate to beneficiaries page with enrollment ID
+        navigate(`/enroll/beneficiaries?enrollmentId=${enrollmentId}`);
+      } catch (error) {
+        console.error('Failed to save billing data:', error);
+        alert('Une erreur s\'est produite lors de l\'enregistrement. Veuillez réessayer.');
+      }
     }
   };
 

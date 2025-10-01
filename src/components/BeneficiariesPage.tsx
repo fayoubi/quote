@@ -29,7 +29,7 @@ import Label from './ui/Label';
 const BeneficiariesPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const enrollmentId = searchParams.get('enrollmentId') || 'demo-enrollment-123';
+  const enrollmentId = searchParams.get('enrollmentId');
 
   const [formState, setFormState] = useState<BeneficiariesFormState>({
     beneficiaries: [],
@@ -75,6 +75,11 @@ const BeneficiariesPage: React.FC = () => {
   ).join('|')]);
 
   const loadBeneficiaries = async () => {
+    if (!enrollmentId) {
+      setFormState(prev => ({ ...prev, isLoading: false, globalError: 'Enrollment ID is missing' }));
+      return;
+    }
+
     try {
       setFormState(prev => ({ ...prev, isLoading: true }));
 
@@ -186,6 +191,14 @@ const BeneficiariesPage: React.FC = () => {
   };
 
   const handleSave = async () => {
+    if (!enrollmentId) {
+      setFormState(prev => ({
+        ...prev,
+        globalError: 'Enrollment ID is missing. Please start from the beginning.'
+      }));
+      return;
+    }
+
     if (!formState.isValid) {
       return;
     }
@@ -229,6 +242,12 @@ const BeneficiariesPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (!enrollmentId) {
+      alert('Enrollment ID is missing. Please start from the beginning.');
+      navigate('/enroll/start');
+      return;
+    }
+
     if (!formState.isValid) {
       return;
     }
@@ -237,7 +256,7 @@ const BeneficiariesPage: React.FC = () => {
 
     if (formState.isValid && !formState.globalError) {
       // Navigate to next step or confirmation page
-      navigate('/enroll/confirmation');
+      navigate(`/enroll/confirmation?enrollmentId=${enrollmentId}`);
     }
   };
 
@@ -245,7 +264,7 @@ const BeneficiariesPage: React.FC = () => {
     if (hasUnsavedChanges) {
       setShowUnsavedWarning(true);
     } else {
-      navigate('/enroll/contribution');
+      navigate(`/enroll/contribution?enrollmentId=${enrollmentId}`);
     }
   };
 
