@@ -529,6 +529,87 @@ const InsuranceForm: React.FC = () => {
     }
   };
 
+  const handleContinue = async () => {
+    try {
+      // Validate required fields
+      if (!formData.subscriber.lastName || !formData.subscriber.firstName) {
+        alert('Veuillez remplir les champs obligatoires (Nom et Prénom)');
+        return;
+      }
+
+      // Create enrollment with customer data
+      const response = await fetch('http://localhost:3002/api/v1/enrollments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-agent-id': '11111111-1111-1111-1111-111111111111'
+        },
+        body: JSON.stringify({
+          customer: {
+            cin: formData.subscriber.idNumber || `TEMP-${Date.now()}`, // Temporary CIN if not provided
+            first_name: formData.subscriber.firstName,
+            last_name: formData.subscriber.lastName,
+            date_of_birth: formData.subscriber.birthDate || '1990-01-01', // Default if not provided
+            email: formData.subscriber.phone || 'temp@example.com', // Using phone as temp email if not available
+            phone: formData.subscriber.phone,
+            address: {
+              street: formData.subscriber.address || '',
+              city: formData.subscriber.city || '',
+              country: formData.subscriber.country || '',
+            }
+          },
+          plan_id: '00000000-0000-0000-0000-000000000001', // TODO: Get from quote context - using placeholder UUID
+          effective_date: new Date().toISOString().split('T')[0],
+          metadata: {
+            subscriber: formData.subscriber,
+            insured: formData.insured,
+            insuredSameAsSubscriber
+          }
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to create enrollment');
+      }
+
+      const enrollmentId = data.data.id;
+
+      // Update enrollment status to in_progress
+      await fetch(`http://localhost:3002/api/v1/enrollments/${enrollmentId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-agent-id': '11111111-1111-1111-1111-111111111111'
+        },
+        body: JSON.stringify({
+          status: 'in_progress'
+        })
+      });
+
+      // Save step data
+      await fetch(`http://localhost:3002/api/v1/enrollments/${enrollmentId}/steps/customer_info`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-agent-id': '11111111-1111-1111-1111-111111111111'
+        },
+        body: JSON.stringify({
+          subscriber: formData.subscriber,
+          insured: formData.insured,
+          insuredSameAsSubscriber
+        })
+      });
+
+      // Navigate to contribution page with enrollmentId
+      window.location.href = `/enroll/contribution?enrollmentId=${enrollmentId}`;
+    } catch (error) {
+      console.error('Failed to save enrollment:', error);
+      alert('Une erreur s\'est produite lors de l\'enregistrement. Veuillez réessayer.');
+    }
+  };
+
   const handleIDScan = (section: 'subscriber' | 'insured') => {
     setScanningFor(section);
     setShowIDScanner(true);
@@ -641,7 +722,7 @@ const InsuranceForm: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => window.location.href = '/enroll/contribution'}
+              onClick={handleContinue}
               className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               Suivant

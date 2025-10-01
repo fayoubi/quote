@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Service API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .endpoint {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .method {
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+
+        .method.post { background: #49cc90; color: white; }
+        .method.get { background: #61affe; color: white; }
+        .method.patch { background: #fca130; color: white; }
+
+        .path {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            color: #667eea;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.9em;
+            border: 1px solid #e1e4e8;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+            color: #e83e8c;
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        .auth-badge {
+            background: #ffc107;
+            color: #000;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 Agent Service API</h1>
+            <p class="subtitle">OTP-based authentication and agent management for Yadmanx platform</p>
+            <p style="margin-top: 10px; opacity: 0.8;">Base URL: <code style="background: rgba(255,255,255,0.2); color: white;">http://localhost:3003/api/v1</code></p>
+        </header>
+
+        <div class="info-box">
+            <strong>📱 Phone Number Support:</strong> Morocco (+212) and France (+33) only<br>
+            <strong>🔑 OTP Expiry:</strong> 5 minutes<br>
+            <strong>🚫 Rate Limiting:</strong> 5 failed attempts = 30-minute lockout<br>
+            <strong>⏰ JWT Token Expiry:</strong> 24 hours<br>
+            <strong>🧪 Development Mode:</strong> OTP codes displayed in console logs
+        </div>
+
+        <!-- Register Agent -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/auth/register</span>
+            </div>
+            <p class="description">Register a new agent with their details. Phone number must be from Morocco (+212) or France (+33).</p>
+
+            <div class="section-title">Request Headers</div>
+            <pre><code>Content-Type: application/json</code></pre>
+
+            <div class="section-title">Request Body</div>
+            <pre><code>{
+  "firstName": "Ahmed",
+  "lastName": "Bennani",
+  "email": "ahmed.bennani@example.com",
+  "countryCode": "+212",
+  "phoneNumber": "612345678",
+  "licenseNumber": "AG123456"  // Optional - auto-generated if not provided
+}</code></pre>
+
+            <div class="section-title">Response (201 Created)</div>
+            <pre><code>{
+  "status": "success",
+  "data": {
+    "agent": {
+      "id": "a1111111-1111-1111-1111-111111111111",
+      "firstName": "Ahmed",
+      "lastName": "Bennani",
+      "email": "ahmed.bennani@example.com",
+      "phoneNumber": "+212612345678",
+      "countryCode": "+212",
+      "licenseNumber": "AG123456",
+      "isActive": true,
+      "createdAt": "2025-09-30T10:00:00Z"
+    }
+  }
+}</code></pre>
+        </div>
+
+        <!-- Request OTP -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/auth/request-otp</span>
+            </div>
+            <p class="description">Request an OTP code for phone authentication. The code is valid for 5 minutes.</p>
+
+            <div class="section-title">Request Body</div>
+            <pre><code>{
+  "countryCode": "+212",
+  "phoneNumber": "612345678",
+  "deliveryMethod": "sms"  // Optional, defaults to 'sms'
+}</code></pre>
+
+            <div class="section-title">Response (200 OK)</div>
+            <pre><code>{
+  "status": "success",
+  "data": {
+    "otpId": "otp-uuid-here",
+    "expiresAt": "2025-09-30T10:05:00Z",
+    "deliveryMethod": "sms",
+    "code": "123456"  // Only in development mode
+  },
+  "message": "OTP sent successfully"
+}</code></pre>
+
+            <div class="section-title">Error Response (429 Too Many Requests)</div>
+            <pre><code>{
+  "status": "error",
+  "message": "Too many failed attempts. Please try again later.",
+  "lockedUntil": "2025-09-30T10:30:00Z"
+}</code></pre>
+        </div>
+
+        <!-- Verify OTP -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/auth/verify-otp</span>
+            </div>
+            <p class="description">Verify the OTP code and receive JWT tokens for authenticated access.</p>
+
+            <div class="section-title">Request Body</div>
+            <pre><code>{
+  "otpId": "otp-uuid-here",
+  "code": "123456"
+}</code></pre>
+
+            <div class="section-title">Response (200 OK)</div>
+            <pre><code>{
+  "status": "success",
+  "data": {
+    "agent": {
+      "id": "a1111111-1111-1111-1111-111111111111",
+      "firstName": "Ahmed",
+      "lastName": "Bennani",
+      "email": "ahmed.bennani@example.com",
+      "phoneNumber": "+212612345678"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresAt": "2025-10-01T10:00:00Z"
+  },
+  "message": "Authentication successful"
+}</code></pre>
+
+            <div class="section-title">Error Response (401 Unauthorized)</div>
+            <pre><code>{
+  "status": "error",
+  "message": "Invalid or expired OTP code"
+}</code></pre>
+        </div>
+
+        <!-- Refresh Token -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/auth/refresh</span>
+            </div>
+            <p class="description">Refresh an expired access token using a valid refresh token.</p>
+
+            <div class="section-title">Request Body</div>
+            <pre><code>{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}</code></pre>
+
+            <div class="section-title">Response (200 OK)</div>
+            <pre><code>{
+  "status": "success",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresAt": "2025-10-01T10:00:00Z"
+  }
+}</code></pre>
+        </div>
+
+        <!-- Logout -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/auth/logout</span>
+                <span class="auth-badge">🔒 Requires Auth</span>
+            </div>
+            <p class="description">Invalidate the current session and log out the agent.</p>
+
+            <div class="section-title">Request Headers</div>
+            <pre><code>Authorization: Bearer {token}</code></pre>
+
+            <div class="section-title">Response (200 OK)</div>
+            <pre><code>{
+  "status": "success",
+  "message": "Logged out successfully"
+}</code></pre>
+        </div>
+
+        <!-- Validate Token -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/auth/validate</span>
+            </div>
+            <p class="description">Validate a JWT token (public endpoint for inter-service communication).</p>
+
+            <div class="section-title">Request Body</div>
+            <pre><code>{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}</code></pre>
+
+            <div class="section-title">Response (200 OK)</div>
+            <pre><code>{
+  "status": "success",
+  "data": {
+    "valid": true,
+    "agent": {
+      "id": "a1111111-1111-1111-1111-111111111111",
+      "phoneNumber": "+212612345678",
+      "email": "ahmed.bennani@example.com",
+      "firstName": "Ahmed",
+      "lastName": "Bennani"
+    }
+  }
+}</code></pre>
+
+            <div class="section-title">Error Response (401 Unauthorized)</div>
+            <pre><code>{
+  "status": "error",
+  "data": {
+    "valid": false,
+    "reason": "Token expired"
+  }
+}</code></pre>
+        </div>
+
+        <!-- Get Agent Profile -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/agents/me</span>
+                <span class="auth-badge">🔒 Requires Auth</span>
+            </div>
+            <p class="description">Retrieve the authenticated agent's profile information.</p>
+
+            <div class="section-title">Request Headers</div>
+            <pre><code>Authorization: Bearer {token}</code></pre>
+
+            <div class="section-title">Response (200 OK)</div>
+            <pre><code>{
+  "status": "success",
+  "data": {
+    "agent": {
+      "id": "a1111111-1111-1111-1111-111111111111",
+      "firstName": "Ahmed",
+      "lastName": "Bennani",
+      "email": "ahmed.bennani@example.com",
+      "phoneNumber": "+212612345678",
+      "countryCode": "+212",
+      "licenseNumber": "AG123456",
+      "isActive": true,
+      "createdAt": "2025-09-30T10:00:00Z",
+      "updatedAt": "2025-09-30T10:00:00Z"
+    }
+  }
+}</code></pre>
+        </div>
+
+        <!-- Update Agent Profile -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method patch">PATCH</span>
+                <span class="path">/agents/me</span>
+                <span class="auth-badge">🔒 Requires Auth</span>
+            </div>
+            <p class="description">Update the authenticated agent's profile information.</p>
+
+            <div class="section-title">Request Headers</div>
+            <pre><code>Authorization: Bearer {token}
+Content-Type: application/json</code></pre>
+
+            <div class="section-title">Request Body</div>
+            <pre><code>{
+  "firstName": "Ahmed",
+  "lastName": "El Bennani",
+  "email": "ahmed.elbennani@example.com"
+}</code></pre>
+
+            <div class="section-title">Response (200 OK)</div>
+            <pre><code>{
+  "status": "success",
+  "data": {
+    "agent": {
+      "id": "a1111111-1111-1111-1111-111111111111",
+      "firstName": "Ahmed",
+      "lastName": "El Bennani",
+      "email": "ahmed.elbennani@example.com",
+      "phoneNumber": "+212612345678",
+      "countryCode": "+212",
+      "licenseNumber": "AG123456",
+      "isActive": true,
+      "updatedAt": "2025-09-30T11:00:00Z"
+    }
+  }
+}</code></pre>
+        </div>
+
+        <div class="info-box">
+            <strong>🔧 Testing Tips:</strong><br>
+            • Use the sample agents from seed data (phone: +212612345678, +212623456789, etc.)<br>
+            • In development mode, OTP codes are displayed in console logs<br>
+            • JWT tokens are valid for 24 hours<br>
+            • After 5 failed OTP attempts, phone number is locked for 30 minutes<br>
+            • Use the /auth/validate endpoint from other services to verify agent tokens
+        </div>
+    </div>
+</body>
+</html>

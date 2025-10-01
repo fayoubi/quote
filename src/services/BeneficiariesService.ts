@@ -64,51 +64,53 @@ export class BeneficiariesService {
       }
 
       // Convert form data to beneficiaries
-      const beneficiaryData: Beneficiary[] = beneficiaries.map((b, index) => ({
-        id: b.id || undefined, // New beneficiaries don't have ID
-        enrollment_id: enrollmentId,
-        last_name: b.last_name.trim(),
+      const beneficiaryData = beneficiaries.map((b, index) => ({
+        type: 'primary', // Default to primary beneficiary
         first_name: b.first_name.trim(),
-        cin: b.cin?.trim() || undefined,
+        last_name: b.last_name.trim(),
+        relationship: 'other', // Default relationship, can be enhanced later
         date_of_birth: b.date_of_birth,
-        place_of_birth: b.place_of_birth.trim(),
-        address: b.address.trim(),
         percentage: parseFloat(b.percentage.toString()),
-        order_index: index + 1,
-        created_at: b.id ? undefined : new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        address: {
+          place_of_birth: b.place_of_birth.trim(),
+          address: b.address.trim(),
+          cin: b.cin?.trim() || null,
+        },
+        display_order: index + 1,
       }));
 
-      // TODO: Replace with actual API call
-      /*
-      const response = await fetch(`${this.baseUrl}/api/v1/enrollments/${enrollmentId}/beneficiaries`, {
+      // Call actual enrollment service API
+      const response = await fetch(`http://localhost:3002/api/v1/enrollments/${enrollmentId}/beneficiaries`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-agent-id': '11111111-1111-1111-1111-111111111111'
         },
         body: JSON.stringify({ beneficiaries: beneficiaryData }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      const apiResult = await response.json();
+
+      if (!response.ok || !apiResult.success) {
+        throw new Error(apiResult.error || `HTTP error! status: ${response.status}`);
       }
 
-      const result: BeneficiariesResponse = await response.json();
-      */
+      // Also save step data
+      await fetch(`http://localhost:3002/api/v1/enrollments/${enrollmentId}/steps/beneficiaries`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-agent-id': '11111111-1111-1111-1111-111111111111'
+        },
+        body: JSON.stringify({ beneficiaries: beneficiaryData })
+      });
 
-      // Simulate API response with localStorage
       const result: BeneficiariesResponse = {
         success: true,
-        data: beneficiaryData.map((b, index) => ({
-          ...b,
-          id: b.id || `ben_${Date.now()}_${index}`, // Generate ID for new ones
-        })),
+        data: apiResult.data || [],
         totalPercentage: validation.totalPercentage,
         message: 'Beneficiaries saved successfully'
       };
-
-      // Store in localStorage for persistence during development
-      localStorage.setItem(`beneficiaries_${enrollmentId}`, JSON.stringify(result));
 
       return result;
     } catch (error) {

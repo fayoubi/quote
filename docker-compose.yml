@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  # Pricing Service
+  pricing-service:
+    build: ./pricing-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:postgres@pricing-db:5432/pricing
+      - REDIS_URL=redis://pricing-redis:6379
+    depends_on:
+      - pricing-db
+      - pricing-redis
+    volumes:
+      - ./pricing-service:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+  pricing-db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=pricing
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pricing-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  pricing-redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - pricing-redis-data:/data
+    restart: unless-stopped
+
+  # Enrollment Service
+  enrollment-service:
+    build: ./enrollment-service
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - PORT=3002
+      - DATABASE_URL=postgresql://postgres:postgres@enrollment-db:5432/enrollment
+      - ENCRYPTION_KEY=dev-key-change-in-production
+    depends_on:
+      - enrollment-db
+    volumes:
+      - ./enrollment-service:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+  enrollment-db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=enrollment
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - enrollment-db-data:/var/lib/postgresql/data
+      - ./enrollment-service/db/migrations:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+  # Agent Service
+  agent-service:
+    build: ./agent-service
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+      - DATABASE_URL=postgresql://postgres:postgres@agent-db:5432/agent
+      - JWT_SECRET=dev-jwt-secret-change-in-production
+      - JWT_EXPIRES_IN=24h
+      - OTP_EXPIRES_IN=5
+      - MAX_OTP_ATTEMPTS=5
+      - LOCKOUT_DURATION=30
+    depends_on:
+      - agent-db
+    volumes:
+      - ./agent-service:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+  agent-db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=agent
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - agent-db-data:/var/lib/postgresql/data
+      - ./agent-service/db/migrations:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+volumes:
+  pricing-db-data:
+  pricing-redis-data:
+  enrollment-db-data:
+  agent-db-data:
