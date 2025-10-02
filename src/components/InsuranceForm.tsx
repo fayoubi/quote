@@ -5,6 +5,7 @@ import IDScanner from './IDScanner';
 import { IDScanResult } from '../types/idScanner';
 import { FieldMappingService } from '../services/FieldMappingService';
 import { useQuote } from '../context/QuoteContext';
+import { useAgentAuth } from '../context/AgentAuthContext';
 
 // Minimal French → English country mapping for the cities package
 const frToEnCountry: Record<string, string> = {
@@ -407,6 +408,7 @@ const PersonSection: React.FC<PersonSectionProps> = ({ title, person, section, i
 
 const InsuranceForm: React.FC = () => {
   const { prepopulationUtils } = useQuote();
+  const { agent, token } = useAgentAuth();
   const [insuredSameAsSubscriber, setInsuredSameAsSubscriber] = useState<boolean>(true);
   const [formData, setFormData] = useState<{ subscriber: Person; insured: Person }>({
     subscriber: { ...emptyPerson },
@@ -458,7 +460,7 @@ const InsuranceForm: React.FC = () => {
         console.log('Fetching enrollment from:', `http://localhost:3002/api/v1/enrollments/${enrollmentId}`);
         const response = await fetch(`http://localhost:3002/api/v1/enrollments/${enrollmentId}`, {
           headers: {
-            'x-agent-id': '11111111-1111-1111-1111-111111111111'
+            'x-agent-id': agent?.id || ''
           }
         });
 
@@ -484,7 +486,7 @@ const InsuranceForm: React.FC = () => {
         try {
           const stepResponse = await fetch(`http://localhost:3002/api/v1/enrollments/${enrollmentId}/steps/customer_info`, {
             headers: {
-              'x-agent-id': '11111111-1111-1111-1111-111111111111'
+              'x-agent-id': agent?.id || ''
             }
           });
 
@@ -665,7 +667,7 @@ const InsuranceForm: React.FC = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-agent-id': '11111111-1111-1111-1111-111111111111'
+            'x-agent-id': agent?.id || ''
           },
           body: JSON.stringify({
             customer: {
@@ -706,7 +708,7 @@ const InsuranceForm: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-agent-id': '11111111-1111-1111-1111-111111111111'
+          'x-agent-id': agent?.id || ''
         },
         body: JSON.stringify({
           subscriber: formData.subscriber,
