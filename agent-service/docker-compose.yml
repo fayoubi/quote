@@ -10,6 +10,9 @@ services:
       - PORT=3003
       - DATABASE_URL=postgresql://postgres:postgres@agent-db:5432/agent
       - JWT_SECRET=dev-jwt-secret-change-in-production
+      - ENROLLMENT_SERVICE_URL=http://host.docker.internal:3002
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - agent-db
     volumes:

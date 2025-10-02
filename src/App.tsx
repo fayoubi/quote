@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import QuoteForm from './components/QuoteForm';
 import QuoteDisplay from './components/QuoteDisplay';
 import Header from './components/Header';
@@ -12,34 +12,74 @@ import EnrollmentSuccess from './components/EnrollmentSuccess';
 import EnrollmentError from './components/EnrollmentError';
 import AboutPage from './components/AboutPage';
 import { QuoteProvider } from './context/QuoteContext';
+import { AgentAuthProvider } from './context/AgentAuthContext';
+import LoginForm from './components/agent/auth/LoginForm';
+import RegisterForm from './components/agent/auth/RegisterForm';
+import Dashboard from './components/agent/dashboard/Dashboard';
+import ProtectedRoute from './components/common/ProtectedRoute';
 
 function App() {
   return (
-    <QuoteProvider>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Header />
-          <Routes>
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="*" element={
-              <main className="container mx-auto px-4 py-8">
-                <Routes>
-                  <Route path="/" element={<QuoteForm />} />
-                  <Route path="/quote" element={<QuoteDisplay />} />
-                  <Route path="/contact" element={<ContactPage />} />
-                  <Route path="/enroll/start" element={<InsuranceForm />} />
-                  <Route path="/enroll/contribution" element={<EnhancedContributionForm />} />
-                  <Route path="/enroll/beneficiaries" element={<BeneficiariesPage />} />
-                  <Route path="/enroll/confirmation" element={<EnrollmentConfirmation />} />
-                  <Route path="/enroll/success" element={<EnrollmentSuccess />} />
-                  <Route path="/enroll/error" element={<EnrollmentError />} />
-                </Routes>
-              </main>
-            } />
-          </Routes>
-        </div>
-      </Router>
-    </QuoteProvider>
+    <AgentAuthProvider>
+      <QuoteProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50">
+            <Routes>
+              {/* Agent Routes */}
+              <Route path="/agent/login" element={<LoginForm />} />
+              <Route path="/agent/register" element={<RegisterForm />} />
+              <Route
+                path="/agent/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Public Routes with Header */}
+              <Route path="/about" element={
+                <>
+                  <Header />
+                  <AboutPage />
+                </>
+              } />
+
+              {/* Enrollment Routes */}
+              <Route path="/enroll/*" element={
+                <>
+                  <Header />
+                  <main className="container mx-auto px-4 py-8">
+                    <Routes>
+                      <Route path="/start" element={<InsuranceForm />} />
+                      <Route path="/contribution" element={<EnhancedContributionForm />} />
+                      <Route path="/beneficiaries" element={<BeneficiariesPage />} />
+                      <Route path="/confirmation" element={<EnrollmentConfirmation />} />
+                      <Route path="/success" element={<EnrollmentSuccess />} />
+                      <Route path="/error" element={<EnrollmentError />} />
+                    </Routes>
+                  </main>
+                </>
+              } />
+
+              {/* Other Public Routes */}
+              <Route path="*" element={
+                <>
+                  <Header />
+                  <main className="container mx-auto px-4 py-8">
+                    <Routes>
+                      <Route path="/" element={<Navigate to="/agent/login" replace />} />
+                      <Route path="/quote" element={<QuoteDisplay />} />
+                      <Route path="/contact" element={<ContactPage />} />
+                    </Routes>
+                  </main>
+                </>
+              } />
+            </Routes>
+          </div>
+        </Router>
+      </QuoteProvider>
+    </AgentAuthProvider>
   );
 }
 

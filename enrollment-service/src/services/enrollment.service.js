@@ -25,7 +25,36 @@ class EnrollmentService {
   async getById(enrollmentId) {
     const query = 'SELECT * FROM enrollments WHERE id = $1';
     const result = await pool.query(query, [enrollmentId]);
-    return result.rows[0] || null;
+    const enrollment = result.rows[0];
+
+    if (!enrollment) return null;
+
+    // Parse JSON fields if they're strings
+    if (typeof enrollment.completed_steps === 'string') {
+      try {
+        enrollment.completed_steps = JSON.parse(enrollment.completed_steps);
+      } catch (e) {
+        enrollment.completed_steps = [];
+      }
+    }
+
+    if (typeof enrollment.metadata === 'string') {
+      try {
+        enrollment.metadata = JSON.parse(enrollment.metadata);
+      } catch (e) {
+        enrollment.metadata = {};
+      }
+    }
+
+    if (typeof enrollment.customer === 'string') {
+      try {
+        enrollment.customer = JSON.parse(enrollment.customer);
+      } catch (e) {
+        enrollment.customer = null;
+      }
+    }
+
+    return enrollment;
   }
 
   async list(filters = {}) {
@@ -221,9 +250,7 @@ class EnrollmentService {
         throw new ApiError(404, 'Enrollment not found');
       }
 
-      if (enrollment.status !== 'in_progress') {
-        throw new ApiError(400, 'Only in_progress enrollments can be submitted');
-      }
+      // No status check - allow submission from any status for MVP
 
       // Check if minimum required steps are completed
       const requiredSteps = ['customer_info', 'billing', 'beneficiaries'];

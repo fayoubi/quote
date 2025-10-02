@@ -149,8 +149,13 @@ class EnrollmentController {
 
     const stepData = await stepDataService.get(id, stepId);
 
+    // Return empty data if not found instead of throwing error (for MVP)
     if (!stepData) {
-      throw new ApiError(404, 'Step data not found');
+      res.json({
+        success: true,
+        data: null,
+      });
+      return;
     }
 
     res.json({

@@ -3,10 +3,13 @@ import crypto from 'crypto';
 
 class AgentService {
   /**
-   * Generate random 6-digit license number
+   * Generate license number in format: AG-YYYY-XXXXXX
+   * Example: AG-2025-482917
    */
   generateLicenseNumber() {
-    return crypto.randomInt(100000, 999999).toString();
+    const year = new Date().getFullYear();
+    const randomSixDigit = crypto.randomInt(100000, 999999).toString();
+    return `AG-${year}-${randomSixDigit}`;
   }
 
   /**
@@ -35,7 +38,7 @@ class AgentService {
    * Register new agent
    */
   async register(agentData) {
-    const {  phone_number, country_code, first_name, last_name, email } = agentData;
+    const {  phone_number, country_code, first_name, last_name, email, agency_name } = agentData;
 
     // Validate phone number
     const validatedPhone = this.validatePhoneNumber(phone_number, country_code);
@@ -69,8 +72,8 @@ class AgentService {
 
     // Insert new agent
     const insertQuery = `
-      INSERT INTO agents (phone_number, country_code, first_name, last_name, email, license_number)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO agents (phone_number, country_code, first_name, last_name, email, license_number, agency_name, is_active)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, true)
       RETURNING *
     `;
 
@@ -81,6 +84,7 @@ class AgentService {
       last_name,
       email,
       licenseNumber,
+      agency_name,
     ]);
 
     return result.rows[0];
@@ -184,6 +188,51 @@ class AgentService {
     }
 
     return result.rows[0];
+  }
+
+  /**
+   * Update last login timestamp for agent
+   */
+  async updateLastLogin(agentId) {
+    const query = `
+      UPDATE agents
+      SET last_login_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, [agentId]);
+
+    if (result.rows.length === 0) {
+      throw new Error('Agent not found');
+    }
+
+    return result.rows[0];
+  }
+
+  /**
+   * Get agent's enrollments from enrollment-service
+   */
+  async getAgentEnrollments(agentId) {
+    try {
+      // Call enrollment-service API
+      const enrollmentServiceUrl = process.env.ENROLLMENT_SERVICE_URL || 'http://localhost:3002';
+      const response = await fetch(`${enrollmentServiceUrl}/api/v1/enrollments?agentId=${agentId}`);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // No enrollments found
+          return [];
+        }
+        throw new Error(`Enrollment service responded with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.enrollments || data.data || [];
+    } catch (error) {
+      console.error('Error fetching agent enrollments:', error);
+      throw new Error('Failed to fetch enrollments from enrollment service');
+    }
   }
 }
 
