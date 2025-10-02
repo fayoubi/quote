@@ -4,7 +4,7 @@ import crypto from 'crypto';
 class OTPService {
   constructor() {
     this.OTP_LENGTH = 6;
-    this.OTP_EXPIRY_MINUTES = 5;
+    this.OTP_EXPIRY_MINUTES = 10; // Updated from 5 to 10 minutes per agent login story requirements
     this.MAX_ATTEMPTS = 5;
     this.LOCKOUT_DURATION_MINUTES = 30;
   }

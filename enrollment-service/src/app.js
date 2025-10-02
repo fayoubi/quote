@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 
 import enrollmentRoutes from './routes/enrollment.routes.js';
+import agentRoutes from './routes/agent.routes.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import pool from './config/database.js';
 
@@ -97,6 +98,7 @@ app.get('/api/docs/', (req, res) => {
 });
 
 // API routes
+app.use('/api/v1', agentRoutes);
 app.use('/api/v1', enrollmentRoutes);
 
 // Error handling

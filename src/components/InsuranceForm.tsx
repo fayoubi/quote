@@ -443,6 +443,122 @@ const InsuranceForm: React.FC = () => {
     }));
   };
 
+  // Load existing enrollment data if viewing/editing
+  useEffect(() => {
+    const loadEnrollmentData = async () => {
+      const enrollmentId = sessionStorage.getItem('current_enrollment_id');
+      console.log('Loading enrollment data for ID:', enrollmentId);
+
+      if (!enrollmentId) {
+        console.log('No enrollment ID found in sessionStorage');
+        return;
+      }
+
+      try {
+        console.log('Fetching enrollment from:', `http://localhost:3002/api/v1/enrollments/${enrollmentId}`);
+        const response = await fetch(`http://localhost:3002/api/v1/enrollments/${enrollmentId}`, {
+          headers: {
+            'x-agent-id': '11111111-1111-1111-1111-111111111111'
+          }
+        });
+
+        console.log('Enrollment fetch response status:', response.status);
+
+        if (!response.ok) {
+          console.error('Failed to fetch enrollment data, status:', response.status);
+          return;
+        }
+
+        const data = await response.json();
+        console.log('Enrollment data received:', data);
+
+        const enrollment = data.data || data.enrollment;
+        console.log('Parsed enrollment:', enrollment);
+
+        if (!enrollment) {
+          console.log('No enrollment found in response');
+          return;
+        }
+
+        // First check if we have step data saved
+        try {
+          const stepResponse = await fetch(`http://localhost:3002/api/v1/enrollments/${enrollmentId}/steps/customer_info`, {
+            headers: {
+              'x-agent-id': '11111111-1111-1111-1111-111111111111'
+            }
+          });
+
+          if (stepResponse.ok) {
+            const stepData = await stepResponse.json();
+            console.log('Step data received:', stepData);
+
+            if (stepData.success && stepData.data?.step_data) {
+              const savedData = stepData.data.step_data;
+              console.log('Using saved step data:', savedData);
+
+              setFormData({
+                subscriber: savedData.subscriber || { ...emptyPerson },
+                insured: savedData.insured || { ...emptyPerson }
+              });
+
+              setInsuredSameAsSubscriber(savedData.insuredSameAsSubscriber ?? true);
+              return;
+            }
+          }
+        } catch (stepError) {
+          console.log('No step data found, using enrollment metadata');
+        }
+
+        // Fallback to enrollment metadata
+        const customer = enrollment.customer;
+        const metadata = enrollment.metadata || {};
+        console.log('Customer:', customer);
+        console.log('Metadata:', metadata);
+
+        if (customer || metadata.subscriber) {
+          const subscriberData = metadata.subscriber || {
+            salutation: '',
+            lastName: customer?.last_name || '',
+            firstName: customer?.first_name || '',
+            idNumber: customer?.cin || '',
+            nationality: '',
+            passportNumber: '',
+            residencePermit: '',
+            birthDate: customer?.date_of_birth || '',
+            birthPlace: '',
+            address: customer?.address?.street || '',
+            city: customer?.address?.city || '',
+            country: customer?.address?.country || '',
+            phone: customer?.phone || '',
+            occupation: '',
+            maritalStatus: '',
+            widowed: false,
+            numberOfChildren: '',
+            usCitizen: '',
+            tin: ''
+          };
+
+          const insuredData = metadata.insured || { ...subscriberData };
+          const sameAsSubscriber = metadata.insuredSameAsSubscriber ?? true;
+
+          console.log('Setting form data - subscriber:', subscriberData);
+          console.log('Setting form data - insured:', insuredData);
+
+          setFormData({
+            subscriber: subscriberData,
+            insured: insuredData
+          });
+
+          setInsuredSameAsSubscriber(sameAsSubscriber);
+        }
+      } catch (error) {
+        console.error('Error loading enrollment data:', error);
+      }
+    };
+
+    loadEnrollmentData();
+  }, []);
+
   // Load prepopulation data on component mount
   useEffect(() => {
     const prepopulationData = prepopulationUtils.getPrepopulationData();
@@ -537,56 +653,53 @@ const InsuranceForm: React.FC = () => {
         return;
       }
 
-      // Create enrollment with customer data
-      const response = await fetch('http://localhost:3002/api/v1/enrollments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-agent-id': '11111111-1111-1111-1111-111111111111'
-        },
-        body: JSON.stringify({
-          customer: {
-            cin: formData.subscriber.idNumber || `TEMP-${Date.now()}`, // Temporary CIN if not provided
-            first_name: formData.subscriber.firstName,
-            last_name: formData.subscriber.lastName,
-            date_of_birth: formData.subscriber.birthDate || '1990-01-01', // Default if not provided
-            email: formData.subscriber.phone || 'temp@example.com', // Using phone as temp email if not available
-            phone: formData.subscriber.phone,
-            address: {
-              street: formData.subscriber.address || '',
-              city: formData.subscriber.city || '',
-              country: formData.subscriber.country || '',
-            }
+      // Check if we're updating an existing enrollment or creating a new one
+      const existingEnrollmentId = sessionStorage.getItem('current_enrollment_id');
+      let enrollmentId: string;
+
+      if (existingEnrollmentId) {
+        enrollmentId = existingEnrollmentId;
+      } else {
+        // Create new enrollment with customer data
+        const response = await fetch('http://localhost:3002/api/v1/enrollments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-agent-id': '11111111-1111-1111-1111-111111111111'
           },
-          plan_id: '00000000-0000-0000-0000-000000000001', // TODO: Get from quote context - using placeholder UUID
-          effective_date: new Date().toISOString().split('T')[0],
-          metadata: {
-            subscriber: formData.subscriber,
-            insured: formData.insured,
-            insuredSameAsSubscriber
-          }
-        })
-      });
+          body: JSON.stringify({
+            customer: {
+              cin: formData.subscriber.idNumber || `TEMP-${Date.now()}`, // Temporary CIN if not provided
+              first_name: formData.subscriber.firstName,
+              last_name: formData.subscriber.lastName,
+              date_of_birth: formData.subscriber.birthDate || '1990-01-01', // Default if not provided
+              email: formData.subscriber.phone || 'temp@example.com', // Using phone as temp email if not available
+              phone: formData.subscriber.phone,
+              address: {
+                street: formData.subscriber.address || '',
+                city: formData.subscriber.city || '',
+                country: formData.subscriber.country || '',
+              }
+            },
+            plan_id: '00000000-0000-0000-0000-000000000001', // TODO: Get from quote context - using placeholder UUID
+            effective_date: new Date().toISOString().split('T')[0],
+            metadata: {
+              subscriber: formData.subscriber,
+              insured: formData.insured,
+              insuredSameAsSubscriber
+            }
+          })
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to create enrollment');
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Failed to create enrollment');
+        }
+
+        enrollmentId = data.data.id;
+        sessionStorage.setItem('current_enrollment_id', enrollmentId);
       }
-
-      const enrollmentId = data.data.id;
-
-      // Update enrollment status to in_progress
-      await fetch(`http://localhost:3002/api/v1/enrollments/${enrollmentId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-agent-id': '11111111-1111-1111-1111-111111111111'
-        },
-        body: JSON.stringify({
-          status: 'in_progress'
-        })
-      });
 
       // Save step data
       await fetch(`http://localhost:3002/api/v1/enrollments/${enrollmentId}/steps/customer_info`, {

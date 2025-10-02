@@ -6,29 +6,52 @@ import { ApiError, asyncHandler } from '../middleware/errorHandler.js';
 class AuthController {
   // POST /api/v1/auth/register - Register new agent
   register = asyncHandler(async (req, res) => {
-    const { phone_number, country_code, first_name, last_name, email } = req.body;
+    const { phone_number, country_code, first_name, last_name, email, agency_name } = req.body;
 
     if (!phone_number || !country_code || !first_name || !last_name) {
       throw new ApiError(400, 'phone_number, country_code, first_name, and last_name are required');
     }
 
+    // Register the agent
     const agent = await agentService.register({
       phone_number,
       country_code,
       first_name,
       last_name,
       email,
+      agency_name,
     });
+
+    // Generate OTP for verification
+    const otp = await otpService.createOTP(agent.phone_number, 'sms');
 
     res.status(201).json({
       success: true,
-      data: agent,
+      message: 'Agent registered successfully. Please verify OTP.',
+      data: {
+        agent: {
+          id: agent.id,
+          first_name: agent.first_name,
+          last_name: agent.last_name,
+          email: agent.email,
+          phone_number: agent.phone_number,
+          country_code: agent.country_code,
+          license_number: agent.license_number,
+          agency_name: agent.agency_name,
+          is_active: agent.is_active,
+          created_at: agent.created_at,
+        },
+        otp: {
+          code: otp.code,
+          expires_at: otp.expiresAt,
+        },
+      },
     });
   });
 
   // POST /api/v1/auth/request-otp - Request OTP for login
   requestOTP = asyncHandler(async (req, res) => {
-    const { phone_number, delivery_method = 'sms' } = req.body;
+    const { phone_number, country_code } = req.body;
 
     if (!phone_number) {
       throw new ApiError(400, 'phone_number is required');
@@ -42,19 +65,23 @@ class AuthController {
     }
 
     // Check if agent is active
-    if (agent.status !== 'active') {
+    if (!agent.is_active) {
       throw new ApiError(403, 'Agent account is not active');
     }
 
     // Create OTP
-    const otpResult = await otpService.createOTP(phone_number, delivery_method);
+    const otp = await otpService.createOTP(agent.phone_number, 'sms');
 
     res.json({
       success: true,
-      message: `OTP sent via ${delivery_method}`,
-      expiresAt: otpResult.expiresAt,
-      deliveryMethod: otpResult.deliveryMethod,
-      ...(process.env.NODE_ENV === 'development' && { code: otpResult.code }),
+      message: 'OTP sent successfully',
+      data: {
+        phone_number: agent.phone_number,
+        otp: {
+          code: otp.code || '',
+          expires_at: otp.expiresAt || '',
+        },
+      },
     });
   });
 
@@ -80,6 +107,9 @@ class AuthController {
     if (agent.status !== 'active') {
       throw new ApiError(403, 'Agent account is not active');
     }
+
+    // Update last login timestamp
+    await agentService.updateLastLogin(agent.id);
 
     // Generate token
     const token = tokenService.generateToken(agent);

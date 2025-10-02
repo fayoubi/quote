@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: yadmanx-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@yadmanx.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    restart: unless-stopped
+    networks:
+      - default
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  default:
+    external: false
