@@ -43,8 +43,13 @@ const validateStepData = (stepId, stepData) => {
   // Add step-specific validation here
   switch (stepId) {
     case 'customer_info':
-      if (!stepData.verified) {
-        return { valid: false, error: 'Customer info must be verified' };
+      // Validate that we have subscriber data at minimum
+      if (!stepData.subscriber || typeof stepData.subscriber !== 'object') {
+        return { valid: false, error: 'Customer subscriber data is required' };
+      }
+      // Check for basic required fields
+      if (!stepData.subscriber.firstName || !stepData.subscriber.lastName) {
+        return { valid: false, error: 'Customer first name and last name are required' };
       }
       break;
     case 'plan_selection':
