@@ -23,36 +23,71 @@ class EnrollmentService {
   }
 
   async getById(enrollmentId) {
-    const query = 'SELECT * FROM enrollments WHERE id = $1';
+    const query = `
+      SELECT
+        e.*,
+        c.first_name,
+        c.last_name,
+        c.middle_name,
+        c.email,
+        c.phone,
+        c.cin,
+        c.date_of_birth,
+        c.address as customer_address
+      FROM enrollments e
+      LEFT JOIN customers c ON e.customer_id = c.id
+      WHERE e.id = $1
+    `;
     const result = await pool.query(query, [enrollmentId]);
-    const enrollment = result.rows[0];
+    const row = result.rows[0];
 
-    if (!enrollment) return null;
+    if (!row) return null;
 
     // Parse JSON fields if they're strings
-    if (typeof enrollment.completed_steps === 'string') {
+    if (typeof row.completed_steps === 'string') {
       try {
-        enrollment.completed_steps = JSON.parse(enrollment.completed_steps);
+        row.completed_steps = JSON.parse(row.completed_steps);
       } catch (e) {
-        enrollment.completed_steps = [];
+        row.completed_steps = [];
       }
     }
 
-    if (typeof enrollment.metadata === 'string') {
+    if (typeof row.metadata === 'string') {
       try {
-        enrollment.metadata = JSON.parse(enrollment.metadata);
+        row.metadata = JSON.parse(row.metadata);
       } catch (e) {
-        enrollment.metadata = {};
+        row.metadata = {};
       }
     }
 
-    if (typeof enrollment.customer === 'string') {
-      try {
-        enrollment.customer = JSON.parse(enrollment.customer);
-      } catch (e) {
-        enrollment.customer = null;
-      }
-    }
+    // Build enrollment object with customer data
+    const enrollment = {
+      id: row.id,
+      customer_id: row.customer_id,
+      agent_id: row.agent_id,
+      plan_id: row.plan_id,
+      status: row.status,
+      effective_date: row.effective_date,
+      current_step: row.current_step,
+      completed_steps: row.completed_steps,
+      session_data: row.session_data,
+      metadata: row.metadata,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      submitted_at: row.submitted_at,
+      completed_at: row.completed_at,
+      expires_at: row.expires_at,
+      customer: row.first_name ? {
+        first_name: row.first_name,
+        last_name: row.last_name,
+        middle_name: row.middle_name,
+        email: row.email,
+        phone: row.phone,
+        cin: row.cin,
+        date_of_birth: row.date_of_birth,
+        address: row.customer_address
+      } : null
+    };
 
     return enrollment;
   }
@@ -60,33 +95,75 @@ class EnrollmentService {
   async list(filters = {}) {
     const { agentId, status, customerId, limit = 50, offset = 0 } = filters;
 
-    let query = 'SELECT * FROM enrollments WHERE 1=1';
+    let query = `
+      SELECT
+        e.*,
+        c.first_name,
+        c.last_name,
+        c.middle_name,
+        c.email,
+        c.phone,
+        c.cin,
+        c.date_of_birth,
+        c.address as customer_address
+      FROM enrollments e
+      LEFT JOIN customers c ON e.customer_id = c.id
+      WHERE 1=1
+    `;
     const params = [];
     let paramIndex = 1;
 
     if (agentId) {
-      query += ` AND agent_id = $${paramIndex}`;
+      query += ` AND e.agent_id = $${paramIndex}`;
       params.push(agentId);
       paramIndex++;
     }
 
     if (status) {
-      query += ` AND status = $${paramIndex}`;
+      query += ` AND e.status = $${paramIndex}`;
       params.push(status);
       paramIndex++;
     }
 
     if (customerId) {
-      query += ` AND customer_id = $${paramIndex}`;
+      query += ` AND e.customer_id = $${paramIndex}`;
       params.push(customerId);
       paramIndex++;
     }
 
-    query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    query += ` ORDER BY e.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     params.push(limit, offset);
 
     const result = await pool.query(query, params);
-    return result.rows;
+
+    // Transform rows to include customer object
+    return result.rows.map(row => ({
+      id: row.id,
+      customer_id: row.customer_id,
+      agent_id: row.agent_id,
+      plan_id: row.plan_id,
+      status: row.status,
+      effective_date: row.effective_date,
+      current_step: row.current_step,
+      completed_steps: row.completed_steps,
+      session_data: row.session_data,
+      metadata: row.metadata,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      submitted_at: row.submitted_at,
+      completed_at: row.completed_at,
+      expires_at: row.expires_at,
+      customer: row.first_name ? {
+        first_name: row.first_name,
+        last_name: row.last_name,
+        middle_name: row.middle_name,
+        email: row.email,
+        phone: row.phone,
+        cin: row.cin,
+        date_of_birth: row.date_of_birth,
+        address: row.customer_address
+      } : null
+    }));
   }
 
   async updateStatus(enrollmentId, newStatus, agentId, metadata = {}) {
@@ -109,9 +186,9 @@ class EnrollmentService {
       // Update enrollment status
       const updateQuery = `
         UPDATE enrollments
-        SET status = $1, updated_at = CURRENT_TIMESTAMP,
-            submitted_at = CASE WHEN $1 = 'submitted' THEN CURRENT_TIMESTAMP ELSE submitted_at END,
-            completed_at = CASE WHEN $1 IN ('approved', 'rejected') THEN CURRENT_TIMESTAMP ELSE completed_at END
+        SET status = $1::varchar, updated_at = CURRENT_TIMESTAMP,
+            submitted_at = CASE WHEN $1::varchar = 'submitted' THEN CURRENT_TIMESTAMP ELSE submitted_at END,
+            completed_at = CASE WHEN $1::varchar IN ('approved', 'rejected') THEN CURRENT_TIMESTAMP ELSE completed_at END
         WHERE id = $2
         RETURNING *
       `;
@@ -199,20 +276,12 @@ class EnrollmentService {
     const client = await pool.connect();
 
     try {
-      // Get enrollment with customer info
-      const enrollmentQuery = `
-        SELECT e.*, c.first_name, c.last_name, c.email, c.phone, c.address as customer_address
-        FROM enrollments e
-        JOIN customers c ON e.customer_id = c.id
-        WHERE e.id = $1
-      `;
-      const enrollmentResult = await client.query(enrollmentQuery, [enrollmentId]);
+      // Get enrollment with customer info using getById
+      const enrollment = await this.getById(enrollmentId);
 
-      if (enrollmentResult.rows.length === 0) {
+      if (!enrollment) {
         throw new ApiError(404, 'Enrollment not found');
       }
-
-      const enrollment = enrollmentResult.rows[0];
 
       // Get billing data
       const billingQuery = 'SELECT * FROM billing_data WHERE enrollment_id = $1';
@@ -223,14 +292,20 @@ class EnrollmentService {
       const beneficiariesResult = await client.query(beneficiariesQuery, [enrollmentId]);
 
       // Get step data
-      const stepDataQuery = 'SELECT * FROM enrollment_step_data WHERE enrollment_id = $1';
+      const stepDataQuery = 'SELECT * FROM enrollment_step_data WHERE enrollment_id = $1 ORDER BY created_at';
       const stepDataResult = await client.query(stepDataQuery, [enrollmentId]);
+
+      // Parse step data JSON
+      const steps = stepDataResult.rows.map(row => ({
+        ...row,
+        step_data: typeof row.step_data === 'string' ? JSON.parse(row.step_data) : row.step_data
+      }));
 
       return {
         enrollment,
         billing: billingResult.rows[0] || null,
         beneficiaries: beneficiariesResult.rows,
-        steps: stepDataResult.rows,
+        steps,
       };
     } finally {
       client.release();

@@ -70,7 +70,7 @@ const EnrollmentConfirmation: React.FC = () => {
           plan_id: apiSummary.enrollment.plan_id,
           effective_date: apiSummary.enrollment.effective_date,
         },
-        customer: {
+        customer: apiSummary.enrollment.customer || {
           first_name: apiSummary.enrollment.first_name,
           last_name: apiSummary.enrollment.last_name,
           email: apiSummary.enrollment.email,
