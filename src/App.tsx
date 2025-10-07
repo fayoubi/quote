@@ -37,13 +37,11 @@ function App() {
                 }
               />
 
-              {/* Public Routes with Header */}
-              <Route path="/about" element={
-                <>
-                  <Header />
-                  <AboutPage />
-                </>
-              } />
+              {/* Public Routes - Now with standardized headers/footers */}
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/" element={<QuoteForm />} />
+              <Route path="/quote" element={<QuoteDisplay />} />
 
               {/* Enrollment Routes */}
               <Route path="/enroll/*" element={
@@ -57,20 +55,6 @@ function App() {
                       <Route path="/confirmation" element={<EnrollmentConfirmation />} />
                       <Route path="/success" element={<EnrollmentSuccess />} />
                       <Route path="/error" element={<EnrollmentError />} />
-                    </Routes>
-                  </main>
-                </>
-              } />
-
-              {/* Other Public Routes */}
-              <Route path="*" element={
-                <>
-                  <Header />
-                  <main className="container mx-auto px-4 py-8">
-                    <Routes>
-                      <Route path="/" element={<QuoteForm />} />
-                      <Route path="/quote" element={<QuoteDisplay />} />
-                      <Route path="/contact" element={<ContactPage />} />
                     </Routes>
                   </main>
                 </>
