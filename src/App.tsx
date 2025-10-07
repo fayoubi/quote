@@ -68,7 +68,7 @@ function App() {
                   <Header />
                   <main className="container mx-auto px-4 py-8">
                     <Routes>
-                      <Route path="/" element={<Navigate to="/agent/login" replace />} />
+                      <Route path="/" element={<QuoteForm />} />
                       <Route path="/quote" element={<QuoteDisplay />} />
                       <Route path="/contact" element={<ContactPage />} />
                     </Routes>

@@ -11,12 +11,14 @@ services:
       - PORT=3001
       - DATABASE_URL=postgresql://postgres:postgres@pricing-db:5432/pricing
       - REDIS_URL=redis://pricing-redis:6379
+      - ENABLE_TERM_LIFE=true
     depends_on:
       - pricing-db
       - pricing-redis
     volumes:
       - ./pricing-service:/app
       - /app/node_modules
+      - /app/dist
     restart: unless-stopped
 
   pricing-db:
