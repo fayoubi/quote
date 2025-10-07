@@ -6,10 +6,10 @@ import { ApiError, asyncHandler } from '../middleware/errorHandler.js';
 class AuthController {
   // POST /api/v1/auth/register - Register new agent
   register = asyncHandler(async (req, res) => {
-    const { phone_number, country_code, first_name, last_name, email, agency_name } = req.body;
+    const { phone_number, country_code, first_name, last_name, email, license_number, agency_name } = req.body;
 
-    if (!phone_number || !country_code || !first_name || !last_name) {
-      throw new ApiError(400, 'phone_number, country_code, first_name, and last_name are required');
+    if (!phone_number || !country_code || !first_name || !last_name || !license_number) {
+      throw new ApiError(400, 'phone_number, country_code, first_name, last_name, and license_number are required');
     }
 
     // Register the agent
@@ -19,6 +19,7 @@ class AuthController {
       first_name,
       last_name,
       email,
+      license_number,
       agency_name,
     });
 

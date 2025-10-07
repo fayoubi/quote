@@ -10,6 +10,7 @@ interface FormData {
   email: string;
   countryCode: string;
   phone: string;
+  licenseNumber: string;
   agencyName: string;
 }
 
@@ -18,6 +19,7 @@ interface FormErrors {
   lastName?: string;
   email?: string;
   phone?: string;
+  licenseNumber?: string;
   agencyName?: string;
 }
 
@@ -36,6 +38,7 @@ const RegisterForm: React.FC = () => {
     email: '',
     countryCode: '+212',
     phone: '',
+    licenseNumber: '',
     agencyName: '',
   });
 
@@ -80,6 +83,13 @@ const RegisterForm: React.FC = () => {
       newErrors.phone = `Phone number must be exactly ${selectedCountry?.digits || 9} digits`;
     }
 
+    // License Number validation
+    if (!formData.licenseNumber.trim()) {
+      newErrors.licenseNumber = 'License number is required';
+    } else if (formData.licenseNumber.trim().length > 6) {
+      newErrors.licenseNumber = 'License number must be 6 characters or less';
+    }
+
     // Agency Name validation
     if (!formData.agencyName.trim()) {
       newErrors.agencyName = 'Agency name is required';
@@ -121,6 +131,7 @@ const RegisterForm: React.FC = () => {
         email: formData.email.trim(),
         countryCode: formData.countryCode,
         phone: cleanPhone,
+        licenseNumber: formData.licenseNumber.trim(),
         agencyName: formData.agencyName.trim(),
       });
 
@@ -263,6 +274,30 @@ const RegisterForm: React.FC = () => {
           )}
           <p className="mt-1 text-xs text-gray-500">
             Enter {COUNTRY_CODES.find(c => c.code === formData.countryCode)?.digits || 9} digits (no spaces)
+          </p>
+        </div>
+
+        <div>
+          <label htmlFor="licenseNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            License Number
+          </label>
+          <input
+            type="text"
+            id="licenseNumber"
+            name="licenseNumber"
+            value={formData.licenseNumber}
+            onChange={handleChange}
+            className={`w-full px-4 py-3 border ${
+              errors.licenseNumber ? 'border-red-300' : 'border-gray-300'
+            } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+            placeholder="ABC123"
+            maxLength={6}
+          />
+          {errors.licenseNumber && (
+            <p className="mt-1 text-sm text-red-600">{errors.licenseNumber}</p>
+          )}
+          <p className="mt-1 text-xs text-gray-500">
+            Maximum 6 characters
           </p>
         </div>
 

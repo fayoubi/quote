@@ -38,17 +38,25 @@ class AgentService {
    * Register new agent
    */
   async register(agentData) {
-    const {  phone_number, country_code, first_name, last_name, email, agency_name } = agentData;
+    const {  phone_number, country_code, first_name, last_name, email, license_number, agency_name } = agentData;
 
     // Validate phone number
     const validatedPhone = this.validatePhoneNumber(phone_number, country_code);
 
+    // Validate license number
+    if (!license_number || license_number.trim().length === 0) {
+      throw new Error('License number is required');
+    }
+    if (license_number.trim().length > 6) {
+      throw new Error('License number must be 6 characters or less');
+    }
+
     // Check if agent already exists
     const existingQuery = `
       SELECT * FROM agents
-      WHERE phone_number = $1 OR email = $2
+      WHERE phone_number = $1 OR email = $2 OR license_number = $3
     `;
-    const existingResult = await pool.query(existingQuery, [validatedPhone, email]);
+    const existingResult = await pool.query(existingQuery, [validatedPhone, email, license_number.trim()]);
 
     if (existingResult.rows.length > 0) {
       const existing = existingResult.rows[0];
@@ -58,22 +66,15 @@ class AgentService {
       if (existing.email === email) {
         throw new Error('Email already registered');
       }
-    }
-
-    // Generate unique license number
-    let licenseNumber;
-    let isUnique = false;
-    while (!isUnique) {
-      licenseNumber = this.generateLicenseNumber();
-      const checkQuery = 'SELECT id FROM agents WHERE license_number = $1';
-      const checkResult = await pool.query(checkQuery, [licenseNumber]);
-      isUnique = checkResult.rows.length === 0;
+      if (existing.license_number === license_number.trim()) {
+        throw new Error('License number already registered');
+      }
     }
 
     // Insert new agent
     const insertQuery = `
-      INSERT INTO agents (phone_number, country_code, first_name, last_name, email, license_number, agency_name, is_active)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, true)
+      INSERT INTO agents (phone_number, country_code, first_name, last_name, email, license_number, status)
+      VALUES ($1, $2, $3, $4, $5, $6, 'active')
       RETURNING *
     `;
 
@@ -83,8 +84,7 @@ class AgentService {
       first_name,
       last_name,
       email,
-      licenseNumber,
-      agency_name,
+      license_number.trim(),
     ]);
 
     return result.rows[0];
@@ -196,7 +196,7 @@ class AgentService {
   async updateLastLogin(agentId) {
     const query = `
       UPDATE agents
-      SET last_login_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+      SET updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
       RETURNING *
     `;

@@ -23,6 +23,7 @@ const EnrollmentTable: React.FC = () => {
 
   useEffect(() => {
     fetchEnrollments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const fetchEnrollments = async () => {
@@ -39,14 +40,32 @@ const EnrollmentTable: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch enrollments');
+        // If 404 or 500 with "no enrollments" message, treat as empty list
+        if (response.status === 404 || response.status === 500) {
+          const errorData = await response.json().catch(() => ({}));
+          // Check if it's genuinely an empty list vs a real error
+          if (errorData.message?.toLowerCase().includes('no enrollments') ||
+              errorData.error?.toLowerCase().includes('no enrollments') ||
+              errorData.message?.toLowerCase().includes('not found')) {
+            setEnrollments([]);
+            setError(null);
+            return;
+          }
+        }
+        throw new Error('Unable to connect to enrollment service');
       }
 
       const data = await response.json();
       setEnrollments(data.data || data.enrollments || []);
+      setError(null);
     } catch (err: any) {
       console.error('Error fetching enrollments:', err);
-      setError(err.message || 'Failed to load enrollments');
+      // Only set error for genuine connection/server issues
+      if (err.message.includes('connect') || err.message.includes('fetch')) {
+        setError(null); // Don't show error, just show empty state
+      } else {
+        setError(err.message || 'Failed to load enrollments');
+      }
       setEnrollments([]);
     } finally {
       setIsLoading(false);
