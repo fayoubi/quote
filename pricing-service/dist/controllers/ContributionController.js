@@ -1,0 +1,103 @@
+import Joi from 'joi';
+import { logger } from '../utils/logger.js';
+const CONTRIBUTION_MINIMUMS = {
+    monthly: 250,
+    quarterly: 750,
+    'bi-annual': 1500,
+    annual: 3000,
+};
+export class ContributionController {
+    static async validateContribution(req, res) {
+        try {
+            const schema = Joi.object({
+                amount: Joi.number().positive().required(),
+                frequency: Joi.string().valid('monthly', 'quarterly', 'bi-annual', 'annual').required()
+            });
+            const { error, value } = schema.validate(req.body);
+            if (error) {
+                res.status(400).json({
+                    error: 'Validation failed',
+                    details: error.details.map(detail => detail.message)
+                });
+                return;
+            }
+            const { amount, frequency } = value;
+            logger.info('Processing contribution validation', { amount, frequency });
+            const validation = ContributionController.calculateContribution(amount, frequency);
+            logger.info('Contribution validation completed', {
+                isValid: validation.isValid,
+                monthlyEquivalent: validation.monthlyEquivalent,
+                annualTotal: validation.annualTotal
+            });
+            res.json({
+                validation,
+                timestamp: new Date().toISOString()
+            });
+        }
+        catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            logger.error('Error validating contribution', { message });
+            res.status(500).json({
+                error: 'Internal server error during contribution validation',
+                message
+            });
+        }
+    }
+    static calculateContribution(amount, frequency) {
+        const minimum = CONTRIBUTION_MINIMUMS[frequency];
+        if (!minimum) {
+            return {
+                isValid: false,
+                errorMessage: `Fréquence invalide: ${frequency}`,
+                monthlyEquivalent: 0,
+                annualTotal: 0,
+            };
+        }
+        if (amount < minimum) {
+            const frequencyLabel = {
+                monthly: 'mensuelle',
+                quarterly: 'trimestrielle',
+                'bi-annual': 'semestrielle',
+                annual: 'annuelle'
+            }[frequency] || frequency;
+            return {
+                isValid: false,
+                errorMessage: `Le montant minimum pour la fréquence ${frequencyLabel} est de ${minimum.toLocaleString('fr-MA')} MAD.`,
+                monthlyEquivalent: 0,
+                annualTotal: 0,
+            };
+        }
+        const { monthlyEquivalent, annualTotal } = ContributionController.calculateEquivalents(amount, frequency);
+        return {
+            isValid: true,
+            monthlyEquivalent,
+            annualTotal,
+        };
+    }
+    static calculateEquivalents(amount, frequency) {
+        let monthlyEquivalent;
+        let annualTotal;
+        switch (frequency) {
+            case 'monthly':
+                monthlyEquivalent = amount;
+                annualTotal = amount * 12;
+                break;
+            case 'quarterly':
+                monthlyEquivalent = Math.round(amount / 3);
+                annualTotal = amount * 4;
+                break;
+            case 'bi-annual':
+                monthlyEquivalent = Math.round(amount / 6);
+                annualTotal = amount * 2;
+                break;
+            case 'annual':
+                monthlyEquivalent = Math.round(amount / 12);
+                annualTotal = amount;
+                break;
+            default:
+                throw new Error(`Unknown frequency: ${frequency}`);
+        }
+        return { monthlyEquivalent, annualTotal };
+    }
+}
+//# sourceMappingURL=ContributionController.js.map

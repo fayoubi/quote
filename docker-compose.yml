@@ -18,7 +18,6 @@ services:
     volumes:
       - ./pricing-service:/app
       - /app/node_modules
-      - /app/dist
     restart: unless-stopped
 
   pricing-db:
