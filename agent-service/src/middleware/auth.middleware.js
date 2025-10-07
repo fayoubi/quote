@@ -40,6 +40,7 @@ export const authenticateToken = async (req, res, next) => {
       email: sessionValidation.session.email,
       firstName: sessionValidation.session.first_name,
       lastName: sessionValidation.session.last_name,
+      licenseNumber: sessionValidation.session.license_number,
     };
 
     next();
@@ -88,6 +89,7 @@ export const validateTokenForServices = async (req, res, next) => {
         firstName: sessionValidation.session.first_name,
         lastName: sessionValidation.session.last_name,
         status: sessionValidation.session.status,
+        licenseNumber: sessionValidation.session.license_number,
       },
     });
   } catch (error) {
