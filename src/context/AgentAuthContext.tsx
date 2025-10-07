@@ -16,6 +16,7 @@ interface RegisterData {
   email: string;
   countryCode: string;
   phone: string;
+  licenseNumber: string;
   agencyName: string;
 }
 
@@ -79,7 +80,17 @@ export const AgentAuthProvider: React.FC<AgentAuthProviderProps> = ({ children }
           });
 
           if (response.ok) {
-            const agentData = await response.json();
+            const result = await response.json();
+            const agentFromAPI = result.data || result;
+            const agentData: Agent = {
+              id: agentFromAPI.id,
+              firstName: agentFromAPI.first_name || agentFromAPI.firstName,
+              lastName: agentFromAPI.last_name || agentFromAPI.lastName,
+              email: agentFromAPI.email,
+              phone: agentFromAPI.phone || agentFromAPI.phone_number,
+              licenseNumber: agentFromAPI.license_number || agentFromAPI.licenseNumber,
+              agencyName: agentFromAPI.agency_name || agentFromAPI.agencyName || '',
+            };
             setAgent(agentData);
             setToken(storedToken);
           } else {
@@ -89,8 +100,16 @@ export const AgentAuthProvider: React.FC<AgentAuthProviderProps> = ({ children }
           }
         } catch (err) {
           console.error('Token verification failed:', err);
-          localStorage.removeItem(TOKEN_KEY);
-          localStorage.removeItem(AGENT_KEY);
+          // Fall back to stored agent data if API fails
+          try {
+            const parsedAgent = JSON.parse(storedAgent);
+            setAgent(parsedAgent);
+            setToken(storedToken);
+          } catch {
+            // If parsing fails, clear everything
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(AGENT_KEY);
+          }
         }
       }
 
@@ -116,6 +135,7 @@ export const AgentAuthProvider: React.FC<AgentAuthProviderProps> = ({ children }
           first_name: data.firstName,
           last_name: data.lastName,
           email: data.email,
+          license_number: data.licenseNumber,
           agency_name: data.agencyName,
         }),
       });
@@ -211,7 +231,7 @@ export const AgentAuthProvider: React.FC<AgentAuthProviderProps> = ({ children }
         email: result.agent.email,
         phone: result.agent.phone || result.agent.phone_number,
         licenseNumber: result.agent.license_number || result.agent.licenseNumber,
-        agencyName: result.agent.agency_name || result.agent.agencyName,
+        agencyName: result.agent.agency_name || result.agent.agencyName || '',
       };
 
       setAgent(agentData);
