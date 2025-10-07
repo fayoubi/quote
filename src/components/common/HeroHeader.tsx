@@ -1,6 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { ArrowRight, Shield } from 'lucide-react';
 
 interface HeroHeaderProps {
   title?: string;
@@ -19,6 +19,36 @@ const HeroHeader: React.FC<HeroHeaderProps> = ({
 
   return (
     <div className="bg-primary-900 text-white">
+      {/* Top Navigation Bar */}
+      <div className="border-b border-primary-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <Link to="/" className="flex items-center space-x-2">
+              <Shield className="h-8 w-8 text-white" />
+              <span className="text-xl font-bold text-white">YadmanX</span>
+            </Link>
+            <nav className="hidden md:flex items-center space-x-6">
+              <Link to="/" className="text-white/80 hover:text-white transition-colors">
+                Get Quote
+              </Link>
+              <Link to="/about" className="text-white/80 hover:text-white transition-colors">
+                About
+              </Link>
+              <Link to="/contact" className="text-white/80 hover:text-white transition-colors">
+                Contact
+              </Link>
+              <Link
+                to="/agent/login"
+                className="bg-white text-primary-900 hover:bg-primary-100 px-6 py-2 rounded-lg font-semibold transition-colors"
+              >
+                Agent Login
+              </Link>
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      {/* Hero Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
