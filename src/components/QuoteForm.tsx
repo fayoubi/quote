@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Info, ChevronDown, Loader2 } from 'lucide-react';
 import { useQuote } from '../context/QuoteContext';
 import { pricingService, PricingService } from '../services/PricingService';
+import PageLayout from './common/PageLayout';
 
 interface QuoteFormData {
   gender: 'male' | 'female';
@@ -141,28 +142,33 @@ const QuoteForm: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* Left Section - Marketing Content */}
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-4xl font-serif font-bold text-primary-900 mb-4">
-              Get a No Exam Term Life Insurance Quote
-            </h1>
-            <p className="text-lg text-gray-700 mb-6">
-              Apply online in minutes. Get an instant decision. Then personalize your coverage.
-            </p>
-          </div>
-          
-          <div className="bg-gray-100 rounded-lg p-6">
-            <div className="aspect-video bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
-              <span className="text-gray-500">Family Image Placeholder</span>
+    <PageLayout
+      title="YadmanX"
+      subtitle="Get Your Quote in Minutes"
+      description="No exam required. Instant online quotes. Simple application process. Get term life insurance coverage for you and your family."
+    >
+      <div className="max-w-4xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Left Section - Marketing Content */}
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-3xl font-bold text-primary-900 mb-4">
+                Get a No Exam Term Life Insurance Quote
+              </h2>
+              <p className="text-lg text-gray-700 mb-6">
+                Apply online in minutes. Get an instant decision. Then personalize your coverage.
+              </p>
             </div>
-            <p className="text-sm text-gray-600">
-              Secure, fast, and reliable term life insurance coverage for you and your family.
-            </p>
+
+            <div className="bg-gray-100 rounded-lg p-6">
+              <div className="aspect-video bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
+                <span className="text-gray-500">Family Image Placeholder</span>
+              </div>
+              <p className="text-sm text-gray-600">
+                Secure, fast, and reliable term life insurance coverage for you and your family.
+              </p>
+            </div>
           </div>
-        </div>
 
         {/* Right Section - Form */}
         <div className="bg-primary-900 rounded-xl p-6">
@@ -336,6 +342,7 @@ const QuoteForm: React.FC = () => {
         </div>
       </div>
     </div>
+    </PageLayout>
   );
 };
 

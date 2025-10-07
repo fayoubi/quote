@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Info, Loader2, AlertCircle } from 'lucide-react';
 import { useQuote } from '../context/QuoteContext';
 import { pricingService, PricingService } from '../services/PricingService';
+import PageLayout from './common/PageLayout';
 
 const QuoteDisplay: React.FC = () => {
   const navigate = useNavigate();
@@ -93,18 +94,24 @@ const QuoteDisplay: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen">
-      {/* Header */}
-      <div className="flex items-center p-4 border-b border-gray-200">
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center text-gray-600 hover:text-gray-800"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back
-        </button>
-        <h1 className="text-xl font-semibold text-primary-600 mx-auto">Your Quote</h1>
-      </div>
+    <PageLayout
+      title="Your Quote"
+      subtitle="Customize Your Coverage"
+      description="Adjust your coverage amount and term length to find the perfect plan for your needs."
+      showHeroButtons={false}
+    >
+      <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg">
+        {/* Header */}
+        <div className="flex items-center p-4 border-b border-gray-200">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center text-gray-600 hover:text-gray-800"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Back
+          </button>
+          <h2 className="text-xl font-semibold text-primary-600 mx-auto">Your Quote</h2>
+        </div>
 
       {/* Error Message */}
       {quoteError && (
@@ -260,6 +267,7 @@ const QuoteDisplay: React.FC = () => {
         </button>
       </div>
     </div>
+    </PageLayout>
   );
 };
 

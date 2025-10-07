@@ -21,6 +21,9 @@ const Header: React.FC = () => {
             <Link to="/contact" className="text-gray-600 hover:text-primary-600 transition-colors">
               Contact
             </Link>
+            <Link to="/agent/login" className="text-gray-600 hover:text-primary-600 transition-colors">
+              Agent Login
+            </Link>
           </nav>
         </div>
       </div>

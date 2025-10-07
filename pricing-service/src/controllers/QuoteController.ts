@@ -31,9 +31,8 @@ export class QuoteController {
       // Calculate quote
       const quoteResponse = await pricingEngine.calculateQuote(quoteRequest);
 
-      // Store quote in database
-      await this.quoteService.saveQuote(quoteResponse.quote);
-
+      // Quotes are ephemeral - no need to save
+      // Simply return the calculated quote
       res.status(200).json(quoteResponse);
     } catch (error) {
       console.error('Error calculating quote:', error);
