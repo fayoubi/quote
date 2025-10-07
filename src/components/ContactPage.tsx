@@ -112,14 +112,15 @@ const ContactPage: React.FC = () => {
 
       {/* Contact Form Section */}
       <div className="py-16 bg-white">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-semibold text-gray-900 mb-4">Contact YadmanX</h2>
             <p className="text-gray-600">We are based in Europe. Please include your country code in the phone number (e.g. +33, +49, +34). Fields marked with * are required.</p>
           </div>
 
-          <Card className="p-6">
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="max-w-3xl mx-auto">
+            <Card className="p-6">
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField label="First name" required>
                 <Input value={form.firstName} onChange={(e)=>update('firstName', e.target.value)} required />
               </FormField>
@@ -164,8 +165,9 @@ const ContactPage: React.FC = () => {
               <div className="md:col-span-2">
                 <Button type="submit" disabled={!isValid} className="w-full">Submit</Button>
               </div>
-            </form>
-          </Card>
+              </form>
+            </Card>
+          </div>
         </div>
       </div>
 
