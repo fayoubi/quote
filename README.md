@@ -65,8 +65,27 @@ This script will:
 
 - **Pricing DB**: PostgreSQL on port 5432
 - **Enrollment DB**: PostgreSQL on port 5433
-- **Agent DB**: PostgreSQL on port 5434 (updated from 5435)
+- **Agent DB**: PostgreSQL on port 5434
 - **Redis Cache**: port 6379
+
+#### Quick psql Access
+
+```bash
+# Pricing Service
+psql -h localhost -p 5432 -U postgres -d pricing
+
+# Enrollment Service
+psql -h localhost -p 5433 -U postgres -d enrollment
+
+# Agent Service
+psql -h localhost -p 5434 -U postgres -d agent
+```
+
+Password for all: `postgres`
+
+See [DATABASE_ACCESS.md](./documentation/DATABASE_ACCESS.md) for detailed database documentation.
+
+**Note**: The pricing service currently uses **in-memory calculations** for quote generation. The database tables (`products`, `rate_tables`) are populated but not queried during normal operation. See [REDIS_USAGE.md](./documentation/REDIS_USAGE.md) for details on data flow.
 
 ## 🚀 Quick Start
 
@@ -216,6 +235,10 @@ For production deployment:
 │   ├── types/             # TypeScript type definitions
 │   └── context/           # React context providers
 ├── pricing-service/        # Real pricing backend (Docker Compose)
+├── documentation/          # Documentation files
+│   ├── DATABASE_ACCESS.md
+│   ├── REDIS_USAGE.md
+│   └── ... (other docs)
 ├── test-quote-api.js      # API test suite
 └── README.md
 ```

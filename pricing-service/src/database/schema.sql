@@ -34,11 +34,13 @@ CREATE TABLE quotes (
     pricing_result JSONB NOT NULL,
     eligibility_flags JSONB NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NOT NULL,
-    INDEX idx_quotes_expires_at (expires_at),
-    INDEX idx_quotes_product_type (product_type),
-    INDEX idx_quotes_created_at (created_at)
+    expires_at TIMESTAMP NOT NULL
 );
+
+-- Create indexes for quotes table
+CREATE INDEX idx_quotes_expires_at ON quotes(expires_at);
+CREATE INDEX idx_quotes_product_type ON quotes(product_type);
+CREATE INDEX idx_quotes_created_at ON quotes(created_at);
 
 -- Insert default products
 INSERT INTO products (product_type, display_name, configuration, is_active) VALUES

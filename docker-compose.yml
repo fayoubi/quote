@@ -30,6 +30,7 @@ services:
       - "5432:5432"
     volumes:
       - pricing-db-data:/var/lib/postgresql/data
+      - ./pricing-service/src/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
     restart: unless-stopped
 
   pricing-redis:
