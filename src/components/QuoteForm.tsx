@@ -161,8 +161,12 @@ const QuoteForm: React.FC = () => {
             </div>
 
             <div className="bg-gray-100 rounded-lg p-6">
-              <div className="aspect-video bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
-                <span className="text-gray-500">Family Image Placeholder</span>
+              <div className="aspect-video bg-gray-200 rounded-lg mb-4 overflow-hidden">
+                <img
+                  src="/term-image.png"
+                  alt="Family term life insurance"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <p className="text-sm text-gray-600">
                 Secure, fast, and reliable term life insurance coverage for you and your family.

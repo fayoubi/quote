@@ -3,50 +3,93 @@
 
 A modern React application for life insurance quotes and enrollment with contribution management.
 
-## ✅ Start all services (Frontend + Pricing API on port 3001)
+## ✅ Start all services (Frontend + All Backend Services)
 
-The app now uses the real `pricing-service` only. Everything is pinned to port 3001.
+The application consists of a React frontend and three backend microservices:
 
-1. Start the backend stack:
+### Quick Start with Script
+
+The easiest way to start everything and verify health:
+
+```bash
+./start-yadmanx.sh
+```
+
+This script will:
+- Start all backend services (pricing, enrollment, agent)
+- Configure frontend environment
+- Start the React development server
+- Run API health checks
+- Run integration tests
+
+### Manual Start
+
+1. **Start all backend services:**
    ```bash
-   cd pricing-service
    docker-compose up -d
    ```
-2. Wait for health to be ready:
+
+2. **Wait for services to be ready:**
    ```bash
+   # Check pricing service (port 3001)
    curl http://localhost:3001/api/v1/health
+
+   # Check enrollment service (port 3002)
+   curl http://localhost:3002/health
+
+   # Check agent service (port 3003)
+   curl http://localhost:3003/health
    ```
-3. Point the frontend to port 3001:
+
+3. **Configure frontend environment:**
    ```bash
-   cd ..
    echo "REACT_APP_PRICING_SERVICE_URL=http://localhost:3001" > .env.local
+   echo "REACT_APP_ENROLLMENT_SERVICE_URL=http://localhost:3002" >> .env.local
+   echo "REACT_APP_AGENT_SERVICE_URL=http://localhost:3003" >> .env.local
    echo "REACT_APP_ENV=development" >> .env.local
    ```
-4. Start the React app:
+
+4. **Start the React app:**
    ```bash
    npm start
    ```
 
-Notes:
-- Frontend: http://localhost:3000
-- Pricing service: http://localhost:3001
+### Service Endpoints
+
+- **Frontend**: http://localhost:3000
+- **Pricing Service**: http://localhost:3001
+- **Enrollment Service**: http://localhost:3002
+- **Agent Service**: http://localhost:3003
+
+### Databases
+
+- **Pricing DB**: PostgreSQL on port 5432
+- **Enrollment DB**: PostgreSQL on port 5433
+- **Agent DB**: PostgreSQL on port 5434 (updated from 5435)
+- **Redis Cache**: port 6379
 
 ## 🚀 Quick Start
 
 ### Development Setup
 
-To run the complete application locally, you need both the frontend and backend services:
+To run the complete application locally, you need both the frontend and all backend services:
 
 #### Local Development
 
-1. **Start the pricing service** (Docker Compose):
+1. **Start all backend services** (Docker Compose):
    ```bash
-   cd pricing-service
    docker-compose up -d
-   cd ..
    ```
 
-2. **Start the React App**:
+2. **Configure environment** (if not already done):
+   ```bash
+   echo "REACT_APP_PRICING_SERVICE_URL=http://localhost:3001" > .env.local
+   echo "REACT_APP_ENROLLMENT_SERVICE_URL=http://localhost:3002" >> .env.local
+   echo "REACT_APP_AGENT_SERVICE_URL=http://localhost:3003" >> .env.local
+   echo "REACT_APP_ENV=development" >> .env.local
+   ```
+
+3. **Start the React App**:
    ```bash
    npm start
    ```

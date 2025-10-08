@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && mkdir -p dist/docs && cp src/docs/*.html src/docs/*.ts dist/docs/",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

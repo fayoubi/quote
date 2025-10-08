@@ -17,6 +17,7 @@ import LoginForm from './components/agent/auth/LoginForm';
 import RegisterForm from './components/agent/auth/RegisterForm';
 import Dashboard from './components/agent/dashboard/Dashboard';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import PageFooter from './components/common/PageFooter';
 
 function App() {
   return (
@@ -57,6 +58,7 @@ function App() {
                       <Route path="/error" element={<EnrollmentError />} />
                     </Routes>
                   </main>
+                  <PageFooter />
                 </>
               } />
             </Routes>

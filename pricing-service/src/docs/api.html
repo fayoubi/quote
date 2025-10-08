@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing Service API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .endpoint {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .method {
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+
+        .method.post { background: #49cc90; color: white; }
+        .method.get { background: #61affe; color: white; }
+
+        .path {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            color: #667eea;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.9em;
+            border: 1px solid #e1e4e8;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+            color: #e83e8c;
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .badge {
+            background: #6c757d;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .badge.required { background: #dc3545; }
+        .badge.optional { background: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 Pricing Service API</h1>
+            <p class="subtitle">Multi-product insurance pricing and quote calculation for Yadmanx platform</p>
+            <p style="margin-top: 10px; opacity: 0.8;">Base URL: <code style="background: rgba(255,255,255,0.2); color: white;">http://localhost:3001/api/v1</code></p>
+        </header>
+
+        <div class="info-box">
+            <strong>🎯 Current Features:</strong><br>
+            • <strong>Term Life Insurance:</strong> 10 and 20 year terms<br>
+            • <strong>Coverage Range:</strong> $250,000 - $1,500,000<br>
+            • <strong>Age Range:</strong> 18-75 years<br>
+            • <strong>Risk Assessment:</strong> 8-tier classification system<br>
+            • <strong>Contribution Validation:</strong> Monthly, Quarterly, Bi-annual, Annual<br>
+            • <strong>Quote Expiration:</strong> 30 days<br>
+            • <strong>Cache:</strong> Redis for sub-500ms responses
+        </div>
+
+        <!-- Health Check -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/health</span>
+            </div>
+            <p class="description">Quick health check endpoint for load balancers and monitoring systems.</p>
+
+            <div class="section-title">Response (200 OK)</div>
+            <pre><code>{
+  "status": "healthy",
+  "timestamp": "2025-01-15T10:30:45.123Z",
+  "uptime": 3600.15,
+  "version": "1.0.0",
+  "environment": "development"
+}</code></pre>
+        </div>
+
+        <!-- Deep Health Check -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/health/deep</span>
+            </div>
+            <p class="description">Comprehensive health check that validates PostgreSQL, Redis, and feature flags.</p>
+
+            <div class="section-title">Response (200 OK)</div>
+            <pre><code>{
+  "status": "healthy",
+  "timestamp": "2025-01-15T10:30:45.123Z",
+  "uptime": 3600.15,
+  "version": "1.0.0",
+  "environment": "development",
+  "checks": {
+    "database": {
+      "status": "healthy",
+      "responseTime": 15.3
+    },
+    "redis": {
+      "status": "healthy",
+      "responseTime": 2.1
+    },
+    "featureFlags": {
+      "status": "healthy",
+      "enabledProducts": ["term_life"]
+    }
+  }
+}</code></pre>
+        </div>
+
+        <!-- Calculate Quote -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/quotes/calculate</span>
+            </div>
+            <p class="description">Calculate insurance quote with risk assessment and pricing. Performs BMI calculation, age validation, and underwriting risk classification.</p>
+
+            <div class="section-title">Request Body</div>
+            <table>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Required</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>productType</code></td>
+                    <td>string</td>
+                    <td><span class="badge required">Required</span></td>
+                    <td>"term_life" (whole_life, annuity coming soon)</td>
+                </tr>
+                <tr>
+                    <td><code>applicant.gender</code></td>
+                    <td>string</td>
+                    <td><span class="badge required">Required</span></td>
+                    <td>"Male" or "Female"</td>
+                </tr>
+                <tr>
+                    <td><code>applicant.birthDate</code></td>
+                    <td>string</td>
+                    <td><span class="badge required">Required</span></td>
+                    <td>Format: YYYY-MM-DD</td>
+                </tr>
+                <tr>
+                    <td><code>applicant.height</code></td>
+                    <td>number</td>
+                    <td><span class="badge required">Required</span></td>
+                    <td>Height in cm (120-250)</td>
+                </tr>
+                <tr>
+                    <td><code>applicant.weight</code></td>
+                    <td>number</td>
+                    <td><span class="badge required">Required</span></td>
+                    <td>Weight in kg (35-200)</td>
+                </tr>
+                <tr>
+                    <td><code>applicant.city</code></td>
+                    <td>string</td>
+                    <td><span class="badge required">Required</span></td>
+                    <td>City of residence</td>
+                </tr>
+                <tr>
+                    <td><code>applicant.usesNicotine</code></td>
+                    <td>boolean</td>
+                    <td><span class="badge required">Required</span></td>
+                    <td>Nicotine use status</td>
+                </tr>
+                <tr>
+                    <td><code>policy.termLength</code></td>
+                    <td>number</td>
+                    <td><span class="badge required">Required</span></td>
+                    <td>10 or 20 years</td>
+                </tr>
+                <tr>
+                    <td><code>policy.coverageAmount</code></td>
+                    <td>number</td>
+                    <td><span class="badge required">Required</span></td>
+                    <td>$250,000 - $1,500,000</td>
+                </tr>
+            </table>
+
+            <div class="section-title">Request Example</div>
+            <pre><code>{
+  "productType": "term_life",
+  "applicant": {
+    "gender": "Male",
+    "birthDate": "1985-06-15",
+    "height": 180,
+    "weight": 80,
+    "city": "Casablanca",
+    "usesNicotine": false
+  },
+  "policy": {
+    "termLength": 20,
+    "coverageAmount": 500000
+  }
+}</code></pre>
+
+            <div class="section-title">Response (200 OK)</div>
+            <pre><code>{
+  "quote": {
+    "id": "quote_term_1703174245123_a1b2c3",
+    "productType": "term_life",
+    "pricing": {
+      "monthlyPremium": 120.54,
+      "annualPremium": 1446.51
+    },
+    "riskAssessment": {
+      "riskClass": "SuperPreferredPlus",
+      "bmi": 24.7,
+      "age": 40,
+      "riskFactors": []
+    },
+    "eligibilityFlags": {
+      "wouldDeclinePostUnderwriting": false,
+      "requiresAdditionalUnderwriting": false,
+      "declineReasons": []
+    },
+    "createdAt": "2025-01-15T10:30:45.123Z",
+    "expiresAt": "2025-02-14T10:30:45.123Z"
+  }
+}</code></pre>
+
+            <div class="section-title">Risk Classes</div>
+            <p class="description">
+                <strong>8-Tier System:</strong> SuperPreferredPlus (best) → SuperPreferred → PreferredPlus → Preferred → Standard → SubStandard → Rated → Declined<br>
+                <strong>BMI Range:</strong> 18.5-24.9 (Preferred), 25-29.9 (Standard), 30+ (SubStandard)<br>
+                <strong>Nicotine Impact:</strong> +1 risk class tier
+            </p>
+
+            <div class="section-title">Error Response (400 Bad Request)</div>
+            <pre><code>{
+  "error": "Validation failed",
+  "details": [
+    {
+      "field": "applicant.age",
+      "message": "Age must be between 18 and 75"
+    }
+  ]
+}</code></pre>
+        </div>
+
+        <!-- Get Quote -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/quotes/:quoteId</span>
+            </div>
+            <p class="description">Retrieve a previously calculated quote by its ID. Quotes expire after 30 days.</p>
+
+            <div class="section-title">Path Parameters</div>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>quoteId</td>
+                    <td>string</td>
+                    <td>Unique quote identifier from calculate endpoint</td>
+                </tr>
+            </table>
+
+            <div class="section-title">Response (200 OK)</div>
+            <pre><code>{
+  "quote": {
+    "id": "quote_term_1703174245123_a1b2c3",
+    "productType": "term_life",
+    "pricing": { ... },
+    "riskAssessment": { ... },
+    "eligibilityFlags": { ... },
+    "createdAt": "2025-01-15T10:30:45.123Z",
+    "expiresAt": "2025-02-14T10:30:45.123Z"
+  }
+}</code></pre>
+
+            <div class="section-title">Error Response (404 Not Found)</div>
+            <pre><code>{
+  "error": "Quote not found",
+  "message": "Invalid quote ID or quote has expired"
+}</code></pre>
+        </div>
+
+        <!-- Get Products -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/products</span>
+            </div>
+            <p class="description">List all available insurance products. Only returns products enabled by feature flags.</p>
+
+            <div class="section-title">Response (200 OK)</div>
+            <pre><code>{
+  "products": [
+    {
+      "product_type": "term_life",
+      "display_name": "Term Life Insurance",
+      "configuration": {
+        "terms": [10, 20],
+        "min_coverage": 250000,
+        "max_coverage": 1500000,
+        "age_min": 18,
+        "age_max": 75
+      },
+      "is_active": true
+    }
+  ]
+}</code></pre>
+        </div>
+
+        <!-- Get Product Details -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/products/:productType</span>
+            </div>
+            <p class="description">Get detailed configuration for a specific product type.</p>
+
+            <div class="section-title">Path Parameters</div>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>productType</td>
+                    <td>string</td>
+                    <td>Product identifier: "term_life", "whole_life", or "annuity"</td>
+                </tr>
+            </table>
+
+            <div class="section-title">Response (200 OK)</div>
+            <pre><code>{
+  "product": {
+    "product_type": "term_life",
+    "display_name": "Term Life Insurance",
+    "configuration": {
+      "terms": [10, 20],
+      "min_coverage": 250000,
+      "max_coverage": 1500000,
+      "age_min": 18,
+      "age_max": 75,
+      "bmi_min": 15,
+      "bmi_max": 45
+    },
+    "is_active": true
+  }
+}</code></pre>
+
+            <div class="section-title">Error Response (404 Not Found)</div>
+            <pre><code>{
+  "error": "Product not found",
+  "message": "Product type not available or disabled"
+}</code></pre>
+        </div>
+
+        <!-- Validate Contribution -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/contributions/validate</span>
+            </div>
+            <p class="description">Validate contribution amounts against minimum requirements and calculate equivalents.</p>
+
+            <div class="section-title">Request Body</div>
+            <table>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Required</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>amount</code></td>
+                    <td>number</td>
+                    <td><span class="badge required">Required</span></td>
+                    <td>Contribution amount in MAD</td>
+                </tr>
+                <tr>
+                    <td><code>frequency</code></td>
+                    <td>string</td>
+                    <td><span class="badge required">Required</span></td>
+                    <td>"monthly", "quarterly", "bi-annual", or "annual"</td>
+                </tr>
+            </table>
+
+            <div class="section-title">Minimum Contribution Requirements</div>
+            <ul style="margin-left: 20px;">
+                <li><strong>Monthly:</strong> 250 MAD</li>
+                <li><strong>Quarterly:</strong> 750 MAD (3 months)</li>
+                <li><strong>Bi-annual:</strong> 1,500 MAD (6 months)</li>
+                <li><strong>Annual:</strong> 3,000 MAD (12 months)</li>
+            </ul>
+
+            <div class="section-title">Request Example</div>
+            <pre><code>{
+  "amount": 500,
+  "frequency": "monthly"
+}</code></pre>
+
+            <div class="section-title">Response (200 OK - Valid)</div>
+            <pre><code>{
+  "validation": {
+    "isValid": true,
+    "monthlyEquivalent": 500,
+    "annualTotal": 6000
+  },
+  "timestamp": "2025-01-15T10:30:45.123Z"
+}</code></pre>
+
+            <div class="section-title">Response (200 OK - Invalid)</div>
+            <pre><code>{
+  "validation": {
+    "isValid": false,
+    "errorMessage": "Monthly contribution must be at least 250 MAD",
+    "monthlyEquivalent": 100,
+    "annualTotal": 1200
+  },
+  "timestamp": "2025-01-15T10:30:45.123Z"
+}</code></pre>
+
+            <div class="section-title">Error Response (400 Bad Request)</div>
+            <pre><code>{
+  "error": "Invalid frequency",
+  "message": "Frequency must be one of: monthly, quarterly, bi-annual, annual"
+}</code></pre>
+        </div>
+
+        <div class="warning-box">
+            <strong>⚡ Rate Limiting:</strong><br>
+            • <strong>/quotes/calculate:</strong> 100 requests per 15 minutes per IP<br>
+            • <strong>/contributions/validate:</strong> 200 requests per 15 minutes per IP<br>
+            • <strong>Other endpoints:</strong> 1000 requests per 15 minutes per IP<br>
+            • Headers included: <code>X-RateLimit-Limit</code>, <code>X-RateLimit-Remaining</code>, <code>X-RateLimit-Reset</code>
+        </div>
+
+        <div class="info-box">
+            <strong>🔧 Testing Tips:</strong><br>
+            • Use the test script: <code>npm run test-api</code><br>
+            • Interactive docs available at: <code>/api/docs/interactive</code><br>
+            • Metrics endpoint (Prometheus format): <code>/api/v1/metrics</code><br>
+            • All timestamps are in ISO 8601 format (UTC)<br>
+            • Quote IDs follow pattern: <code>quote_{product}_{timestamp}_{random}</code><br>
+            • Redis caching enabled for product and rate table queries<br>
+            • Database: PostgreSQL with JSONB support for flexible data storage
+        </div>
+
+        <div class="info-box">
+            <strong>📊 Database Schema:</strong><br>
+            • <strong>products:</strong> Product configurations and feature flags<br>
+            • <strong>rate_tables:</strong> Actuarial rates by risk class, age, gender, term<br>
+            • <strong>quotes:</strong> Generated quotes with 30-day expiration (not persisted in ephemeral mode)
+        </div>
+    </div>
+</body>
+</html>

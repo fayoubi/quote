@@ -48,14 +48,22 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.get('/api/docs/', (_req, res) => {
     try {
-        const docsPath = path.join(__dirname, 'docs', 'apiDocs.html');
-        const docsContent = fs.readFileSync(docsPath, 'utf8');
-        res.set('Content-Type', 'text/html');
-        res.send(docsContent);
+        const docsPath = path.join(__dirname, 'docs', 'api.html');
+        if (fs.existsSync(docsPath)) {
+            const docsContent = fs.readFileSync(docsPath, 'utf8');
+            res.set('Content-Type', 'text/html');
+            res.send(docsContent);
+        }
+        else {
+            res.status(404).json({
+                error: 'Documentation not found',
+                message: 'API documentation is being prepared',
+            });
+        }
     }
     catch (error) {
         console.error('Error serving documentation:', error);
-        res.status(404).send('Documentation not found');
+        res.status(500).json({ error: 'Error loading documentation' });
     }
 });
 app.use('/api/docs/interactive', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
